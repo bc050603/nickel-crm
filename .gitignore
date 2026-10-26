@@ -1,0 +1,8 @@
+# 只提交下面列出的应用文件。客户数据、备份、报告一律不进仓库。
+/*
+!/.gitignore
+!/README.md
+!/index.html
+!/config.js
+!/supabase/
+.DS_Store
