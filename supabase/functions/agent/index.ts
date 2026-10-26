@@ -107,16 +107,24 @@ ${(intel.data ?? []).map((i) => `- ${i.date} [${i.category}] ${clip(i.content, 9
 - 用中文，口语、直接，像一个懂行的同事。先给结论，再分点说明，每点一行，别写长段落。
 - 推荐联系人时只能从上面的客户里选，说清楚为什么找他、聊什么、用哪种方式开口（询价、日常闲聊、分享观点、约见面、回访跟进）。
 - 涉及价格和成交时，引用情报里的原话和日期；没有依据就直说不知道，不要编。
-- 只回复 JSON：{"reply":"给 Bruce 看的回答","contacts":[{"id":"客户id","why":"一句话理由","mode":"询价"}]}。contacts 最多 8 个，按优先级排；没有要推荐的人就给空数组。`;
+- 名字相近的是不同的人（比如“周”和“周青”），公司以表里那一行为准，不要混在一起。
+- reply 里提到的每一位推荐对象，都要放进 contacts。
+- 只回复 JSON：{"reply":"给 Bruce 看的回答","contacts":[{"id":"原样复制表格第一列的 id","name":"名字","why":"一句话理由","mode":"询价"}]}。contacts 最多 8 个，按优先级排；没有要推荐的人就给空数组。`;
 
   try {
     const out = parseJson(await askOpenAI([{ role: "system", content: system }, ...turns]));
     if (!out || typeof out.reply !== "string") return json({ error: "这次没答出来，再问一次" }, 502);
+    // 先按 id 对上；模型偶尔写错 id，就按名字找回同一个人
     const byId = new Map(contacts.map((c) => [c.id, c]));
+    const find = (p: any) => byId.get(String(p?.id ?? "").trim())
+      ?? contacts.find((c) => c.name === p?.name)
+      ?? contacts.find((c) => p?.name && (c.name.includes(p.name) || String(p.name).includes(c.name)));
+    const seen = new Set<string>();
     const picks = (Array.isArray(out.contacts) ? out.contacts : [])
-      .filter((p: any) => p && byId.has(p.id))
+      .map((p: any) => ({ p, c: find(p) }))
+      .filter(({ c }) => c && !seen.has(c.id) && seen.add(c.id))
       .slice(0, 8)
-      .map((p: any) => ({ id: p.id, name: byId.get(p.id)!.name, why: clip(p.why, 80), mode: MODES.includes(p.mode) ? p.mode : "询价" }));
+      .map(({ p, c }) => ({ id: c!.id, name: c!.name, why: clip(p.why, 80), mode: MODES.includes(p.mode) ? p.mode : "询价" }));
     return json({ reply: out.reply, contacts: picks });
   } catch (e) {
     return json({ error: String((e as Error).message ?? e) }, 502);
