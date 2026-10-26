@@ -4,320 +4,380 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1f5c47">
 <title>镍圈客户簿</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231f5c47'/%3E%3Crect x='12' y='18' width='40' height='28' rx='4' fill='%23f4ebcf'/%3E%3Crect x='12' y='18' width='40' height='7' rx='3' fill='%237cc7a3'/%3E%3Crect x='17' y='31' width='22' height='3' rx='1.5' fill='%231f5c47'/%3E%3Crect x='17' y='37' width='14' height='3' rx='1.5' fill='%23a87b22'/%3E%3Crect x='28' y='46' width='8' height='8' fill='%23e2b45c'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Young+Serif&family=Caveat:wght@500;600&family=Special+Elite&display=swap">
 <style>
-/* Layout: sticky top bar with three views (跟进 / 客户 / 情报); records open in a side sheet (full screen on phones) */
+/* Layout: a desk of index cards. Sticky header with tabs (bottom bar on phones); records, the composer and settings open in a right-hand sheet. */
 :root {
-  --bg: #f3f5f5;
-  --surface: #fcfdfd;
-  --sunken: #eaeeee;
-  --ink: #11191c;
-  --ink-2: #4a5558;
-  --muted: #7b8588;
-  --line: #dde2e3;
-  --accent: #0b7a66;
-  --accent-ink: #ffffff;
-  --accent-wash: rgba(11,122,102,.09);
-  --tA: #184f95; --tB: #2a78d6; --tC: #86b6ef; --tD: #cdd3d4;
-  --tA-ink: #ffffff; --tB-ink: #ffffff; --tC-ink: #11191c; --tD-ink: #11191c;
-  --good: #0ca30c; --warn: #fab219; --serious: #ec835a; --critical: #d03b3b; --none: #a3abad;
-  --overdue-wash: rgba(208,59,59,.08);
-  --scrim: rgba(17,25,28,.38);
-  --f-display: "Noto Serif SC", "Songti SC", "STSong", serif;
-  --f-body: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
-  --f-data: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --bg:#ebeae2; --paper:#fcfbf7; --ink:#1e2622; --muted:#5d675f; --line:#d9dbd0; --soft:#f1f1ea;
+  --accent:#1f5c47; --accent-ink:#ffffff; --accent-soft:#e1ece4;
+  --brass:#a87b22; --stamp:#b0362c; --card:#f4ebcf; --card-line:#c6d3e2; --card-ink:#2a2f3a;
+  --tag-white:#fbf6e6;
+  --k-ask:#b5651d; --k-chat:#1f7a52; --k-view:#2f5d8c; --k-meet:#7a4d9e; --k-follow:#8a5a35; --k-other:#56606b; --k-red:#b0362c;
+  --ok:#2c7a4b; --warn:#b5651d; --focus:#2f6fb0; --scrim:rgba(20,26,22,.45);
+  --shadow:0 1px 2px rgba(30,38,34,.06),0 10px 28px rgba(30,38,34,.08);
+  --f-display:"Young Serif",Georgia,"Songti SC","STSong",serif;
+  --f-ui:"Figtree",-apple-system,"PingFang SC","Hiragino Sans GB","Noto Sans SC",sans-serif;
+  --f-hand:"Caveat","Kaiti SC","STKaiti","KaiTi",cursive;
+  --f-type:"Special Elite","American Typewriter","Courier New",monospace;
+  --r:14px;
   color-scheme: light;
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0e1314; --surface: #151c1e; --sunken: #1b2427; --ink: #e8eded; --ink-2: #b3bec0; --muted: #808b8e; --line: #263033;
-    --accent: #3cbfa4; --accent-ink: #0e1314; --accent-wash: rgba(60,191,164,.12);
-    --tA: #b7d3f6; --tB: #5598e7; --tC: #256abf; --tD: #3a4447;
-    --tA-ink: #0e1314; --tB-ink: #0e1314; --tC-ink: #e8eded; --tD-ink: #e8eded;
-    --overdue-wash: rgba(230,103,103,.12); --scrim: rgba(0,0,0,.55);
+    --bg:#111613; --paper:#18201c; --ink:#e7eae2; --muted:#9ba69e; --line:#2a342e; --soft:#1e2722;
+    --accent:#7cc7a3; --accent-ink:#0f1a14; --accent-soft:#1f3329;
+    --brass:#e2b45c; --stamp:#ee7a6e; --card:#262418; --card-line:#39424f; --card-ink:#ece6d2;
+    --tag-white:#ece6d2;
+    --k-ask:#eda35f; --k-chat:#6fca9b; --k-view:#86aee0; --k-meet:#bf9be2; --k-follow:#d6a27a; --k-other:#a9b3bd; --k-red:#ee7a6e;
+    --ok:#6fca9b; --warn:#eda35f; --focus:#8bb8e8; --scrim:rgba(0,0,0,.55);
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.35);
     color-scheme: dark;
   }
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
-body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.6 var(--f-body); }
-body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--surface); }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--f-ui); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--paper); }
 [hidden] { display: none !important; }
-button, input, select, textarea { font: inherit; color: inherit; }
-.num { font-family: var(--f-data); font-variant-numeric: tabular-nums; }
-.muted { color: var(--muted); }
-h1, h2, h3 { margin: 0; text-wrap: balance; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+input, select, textarea { font: inherit; color: inherit; }
+h1, h2, h3 { margin: 0; text-wrap: balance; font-weight: 400; }
 p { margin: 0; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+.type { font-family: var(--f-type); letter-spacing: .02em; }
+.hand { font-family: var(--f-hand); }
+.muted { color: var(--muted); }
+.num { font-variant-numeric: tabular-nums; }
+svg.i { width: 18px; height: 18px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
-/* top bar */
-.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--surface); border-bottom: 1px solid var(--line);
+/* buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 8px 14px; border-radius: 11px; background: var(--accent); color: var(--accent-ink); font-weight: 600; font-size: 14px; white-space: nowrap; }
+.btn:hover { filter: brightness(1.07); }
+.btn.line { background: var(--paper); color: var(--ink); border: 1px solid var(--line); font-weight: 500; }
+.btn.line:hover { background: var(--soft); filter: none; }
+.btn.ghost { background: none; color: var(--muted); font-weight: 500; }
+.btn.ghost:hover { color: var(--ink); background: var(--soft); filter: none; }
+.btn.sm { min-height: 34px; padding: 6px 11px; font-size: 13px; border-radius: 9px; }
+.btn:disabled { opacity: .45; cursor: default; filter: none; }
+.icon-btn { width: 40px; height: 40px; display: inline-grid; place-items: center; border-radius: 11px; color: var(--muted); }
+.icon-btn:hover { background: var(--soft); color: var(--ink); }
+
+/* header */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--paper); border-bottom: 1px solid var(--line);
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-.bar-in { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; gap: 18px; min-height: 56px; flex-wrap: wrap; padding-block: 6px; }
-.brand { font: 700 19px/1 var(--f-display); letter-spacing: .02em; white-space: nowrap; }
-.brand small { font: 500 11px var(--f-data); color: var(--muted); margin-left: 8px; letter-spacing: 0; }
-.tabs { display: flex; gap: 4px; }
-.tab { border: 0; background: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; color: var(--ink-2); font-weight: 600; display: inline-flex; gap: 6px; align-items: center; }
-.tab[aria-selected="true"] { background: var(--accent-wash); color: var(--ink); }
-.tab .badge { font: 500 11px var(--f-data); background: var(--critical); color: #fff; border-radius: 999px; padding: 0 6px; line-height: 17px; }
-.bar .spacer { flex: 1; }
-.btn { border: 1px solid var(--line); background: var(--surface); padding: 7px 12px; border-radius: 8px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; font-size: 13px; }
-.btn:hover { background: var(--sunken); }
-.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
-.btn.primary:hover { filter: brightness(1.06); }
-.btn.ghost { border-color: transparent; background: none; color: var(--ink-2); }
-.btn.sm { padding: 4px 9px; font-size: 12px; }
-.btn:disabled { opacity: .5; cursor: default; }
-@media (max-width: 640px) {
-  .bar-in { gap: 8px 10px; }
-  .brand small { display: none; }
-  .tabs { order: 3; width: 100%; }
-  .tab { flex: 1; justify-content: center; }
+.top-in { max-width: 1160px; margin: 0 auto; min-height: 60px; display: flex; align-items: center; gap: 16px; }
+.logo { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+.logo svg { width: 30px; height: 30px; border-radius: 8px; }
+.logo b { font: 400 21px/1 var(--f-display); }
+.tabs { display: flex; background: var(--soft); border-radius: 999px; padding: 3px; gap: 2px; }
+.tab { padding: 7px 15px; border-radius: 999px; color: var(--muted); font-weight: 600; font-size: 14px; display: inline-flex; gap: 7px; align-items: center; }
+.tab[aria-selected="true"] { background: var(--paper); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+.tab .badge { font: 600 11px/17px var(--f-ui); background: var(--stamp); color: #fff; border-radius: 999px; padding: 0 6px; }
+.top .grow { flex: 1; }
+
+/* bottom nav on phones */
+.bnav { display: none; }
+@media (max-width: 760px) {
+  .top .tabs, .top .rec { display: none; }
+  .bnav { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; z-index: 25; left: 0; right: 0; bottom: 0; background: var(--paper); border-top: 1px solid var(--line);
+    padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+  .bnav button { display: grid; justify-items: center; gap: 2px; padding: 8px 0 7px; font-size: 11px; color: var(--muted); font-weight: 600; position: relative; }
+  .bnav button[aria-selected="true"] { color: var(--accent); }
+  .bnav .plus span.p { width: 44px; height: 44px; margin-top: -18px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; box-shadow: var(--shadow); }
+  .bnav .badge { position: absolute; top: 4px; left: calc(50% + 6px); font: 600 10px/15px var(--f-ui); background: var(--stamp); color: #fff; border-radius: 999px; padding: 0 5px; }
+  main { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important; }
 }
 
 /* main */
-main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 22px 96px; }
-.view { max-width: 1120px; margin: 0 auto; display: grid; gap: 18px; min-width: 0; }
-.vhead { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: flex-end; justify-content: space-between; }
-.vhead h2 { font: 700 22px/1.25 var(--f-display); }
-.vhead p { color: var(--ink-2); font-size: 13px; margin-top: 2px; }
-.stats { display: flex; flex-wrap: wrap; gap: 8px 22px; }
-.stat { display: grid; }
-.stat .v { font: 500 22px/1.15 var(--f-data); }
-.stat .l { font-size: 12px; color: var(--ink-2); }
-.cadence { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 12px; color: var(--ink-2); }
-.cadence input { width: 46px; padding: 3px 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); text-align: center; font: 500 12px var(--f-data); }
+main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 26px 80px; }
+.view { max-width: 1160px; margin: 0 auto; display: grid; gap: 22px; min-width: 0; }
+.hero { display: grid; gap: 6px; }
+.hero .date { font-size: 13px; color: var(--muted); text-transform: uppercase; }
+.hero h1 { font: 400 clamp(32px, 6vw, 48px)/1.08 var(--f-display); }
+.hero .tag { font: 600 24px/1.1 var(--f-hand); color: var(--brass); }
+.hero .sub { color: var(--muted); font-size: 14px; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px; }
+.stat { display: inline-flex; align-items: baseline; gap: 6px; padding: 6px 12px; border-radius: 999px; background: var(--paper); border: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+.stat b { font: 400 18px/1 var(--f-display); color: var(--ink); }
+.sec-h { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.sec-h h2 { font: 400 22px/1.2 var(--f-display); }
+.sec-h .n { color: var(--muted); font-size: 13px; }
+.sec-h .grow { flex: 1; }
 
-/* toolbar */
-.toolbar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
-.toolbar .count { margin-left: auto; font-size: 12px; color: var(--muted); }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); padding: 3px 10px; border-radius: 999px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
-.chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-wash); color: var(--ink); }
-input[type="search"], input[type="text"], input[type="email"], input[type="password"], input[type="date"], input[type="tel"], select, textarea {
-  border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 10px; font-size: 13px; min-width: 0; }
-textarea { width: 100%; resize: vertical; min-height: 64px; line-height: 1.55; }
-input[type="search"] { width: min(260px, 100%); }
-
-/* tier + pills */
-.tier { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 6px; font: 600 12px var(--f-data); flex: none; }
-.tier.A { background: var(--tA); color: var(--tA-ink); } .tier.B { background: var(--tB); color: var(--tB-ink); }
-.tier.C { background: var(--tC); color: var(--tC-ink); } .tier.D { background: var(--tD); color: var(--tD-ink); }
-.tier.sm { width: 18px; height: 18px; font-size: 10px; border-radius: 4px; }
-.pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--ink-2); white-space: nowrap; }
+/* tier label (library call-number style) and stamps */
+.tier { display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 5px; border-radius: 5px; font: 400 14px/1 var(--f-type); flex: none; border: 1px solid transparent; }
+.tier.A { background: var(--accent); color: var(--accent-ink); }
+.tier.B { background: var(--brass); color: var(--paper); }
+.tier.C { background: var(--tag-white); color: #2a2f3a; border-color: var(--line); }
+.tier.D { background: transparent; color: var(--muted); border: 1px dashed var(--line); }
+.tier.sm { min-width: 20px; height: 20px; font-size: 12px; }
+.stamp { display: inline-block; font: 400 12px/1 var(--f-type); padding: 4px 7px 3px; border: 1.5px solid currentColor; border-radius: 4px; white-space: nowrap; }
+.stamp.over { color: var(--stamp); transform: rotate(-3deg); }
+.stamp.today { color: var(--accent); transform: rotate(-3deg); }
+.stamp.soon { color: var(--muted); border-style: dashed; }
 .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
-.cat { font-size: 11px; padding: 1px 7px; border-radius: 4px; background: var(--sunken); color: var(--ink-2); white-space: nowrap; }
-.due { font: 500 11px var(--f-data); padding: 2px 7px; border-radius: 4px; white-space: nowrap; }
-.due.over { background: var(--overdue-wash); color: var(--critical); }
-.due.today { background: var(--accent-wash); color: var(--accent); }
-.due.soon { background: var(--sunken); color: var(--ink-2); }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+.mode { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: var(--soft); color: var(--ink); white-space: nowrap; }
+.mode::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--mc, var(--k-other)); }
 
-/* follow-up cards */
-.group { display: grid; gap: 10px; }
-.group-h { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--ink-2); }
-.group-h strong { color: var(--ink); font-size: 14px; }
-.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 12px; }
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; align-content: start; min-width: 0; }
-.card-top { display: flex; gap: 10px; align-items: center; min-width: 0; }
-.card-top .who { min-width: 0; flex: 1; display: grid; }
-.linkish { border: 0; background: none; padding: 0; cursor: pointer; text-align: left; font-weight: 600; font-size: 15px; color: var(--ink); overflow-wrap: anywhere; }
-.linkish:hover { color: var(--accent); }
-.sub { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
-.card .nx { font-size: 13px; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.acts { display: flex; flex-wrap: wrap; gap: 6px; }
-.soonlist { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
-.soonrow { display: flex; gap: 10px; align-items: center; padding: 9px 14px; border-top: 1px solid var(--line); font-size: 13px; min-width: 0; }
-.soonrow:first-child { border-top: 0; }
-.soonrow .linkish { font-size: 13px; }
-.soonrow .sub { flex: 1; min-width: 0; }
+/* index cards */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 14px; }
+.icard { position: relative; background: var(--card); color: var(--card-ink); border-radius: 6px; box-shadow: var(--shadow); padding: 16px 16px 14px; display: grid; gap: 10px; align-content: start; min-width: 0;
+  background-image: linear-gradient(to bottom, transparent 46px, var(--stamp) 46px, var(--stamp) 47px, transparent 47px), repeating-linear-gradient(to bottom, transparent 0 25px, var(--card-line) 25px 26px);
+  background-position: 0 0, 0 47px; background-size: 100% 100%, 100% calc(100% - 47px); background-repeat: no-repeat; }
+.icard .head { display: flex; align-items: center; gap: 10px; min-height: 28px; }
+.icard .who { flex: 1; min-width: 0; }
+.icard .nm { font: 400 19px/1.2 var(--f-display); text-align: left; overflow-wrap: anywhere; }
+.icard .nm:hover { text-decoration: underline; text-underline-offset: 3px; }
+.icard .co { font-size: 12.5px; opacity: .75; overflow-wrap: anywhere; line-height: 26px; }
+.icard .meta { font-size: 12.5px; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; line-height: 26px; opacity: .85; }
+.icard .note { font: 500 18px/26px var(--f-hand); color: var(--card-ink); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.icard .acts { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 4px; }
+.icard .btn.line { background: var(--paper); }
+.more { justify-self: start; }
 
-/* contact list */
-.list { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
-.row, .lhead { display: grid; grid-template-columns: 24px minmax(0,1.3fr) minmax(0,1.4fr) 7.5em 5.5em 6.2em 6.2em; gap: 12px; align-items: center; padding: 10px 14px; }
-.row { border-top: 1px solid var(--line); cursor: pointer; font-size: 13px; width: 100%; background: none; border-left: 0; border-right: 0; border-bottom: 0; text-align: left; }
-.row:first-of-type { border-top: 0; }
-.row:hover { background: var(--accent-wash); }
+/* contacts list */
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; }
+.toolbar .count { margin-left: auto; font-size: 13px; color: var(--muted); }
+.search { display: flex; align-items: center; gap: 8px; background: var(--paper); border: 1px solid var(--line); border-radius: 11px; padding: 0 12px; min-height: 40px; width: min(320px, 100%); color: var(--muted); }
+.search input { border: 0; background: none; outline: none; flex: 1; min-width: 0; color: var(--ink); font-size: 14px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 5px 11px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper); font: 500 13px/1.2 var(--f-ui); color: var(--muted); white-space: nowrap; }
+.chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+select { min-height: 34px; padding: 5px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper); font-size: 13px; }
+.list { background: var(--paper); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.row { display: grid; grid-template-columns: 30px minmax(0,1.2fr) minmax(0,1.5fr) 8em 5.6em 6.6em 7.2em; gap: 12px; align-items: center; padding: 11px 16px; border-top: 1px solid var(--line); width: 100%; text-align: left; font-size: 13.5px; }
+.row:first-child { border-top: 0; }
+.row:hover { background: var(--soft); }
 .row .nm { font-weight: 600; overflow-wrap: anywhere; }
-.row .co { color: var(--ink-2); overflow-wrap: anywhere; }
-.row .r, .lhead .r { text-align: right; }
-.lhead { padding-block: 9px; font-size: 11px; letter-spacing: .06em; color: var(--muted); background: var(--sunken); }
+.row .co { color: var(--muted); overflow-wrap: anywhere; }
+.row .r { text-align: right; }
 @media (max-width: 760px) {
-  .lhead { display: none; }
-  .row { grid-template-columns: 24px minmax(0,1fr); row-gap: 3px; }
-  .row .meta { grid-column: 2; display: flex; flex-wrap: wrap; gap: 4px 12px; }
-  .row .r { text-align: left; }
+  .row { grid-template-columns: 30px minmax(0,1fr) auto; row-gap: 2px; }
+  .row .co { grid-column: 2 / -1; }
+  .row .rel, .row .st { display: none; }
+  .row .lt { grid-column: 2; text-align: left; }
+  .row .du { grid-row: 1; grid-column: 3; }
 }
-@media (min-width: 761px) { .row .meta { display: contents; } }
-.empty { padding: 28px 16px; text-align: center; color: var(--muted); font-size: 13px; display: grid; gap: 10px; justify-items: center; }
+.empty { padding: 34px 18px; text-align: center; color: var(--muted); display: grid; gap: 12px; justify-items: center; font-size: 14px; }
+.empty .hand { font-size: 24px; color: var(--brass); }
 
-/* intel */
-.intel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
-.irow { display: grid; grid-template-columns: 6.4em 7.6em minmax(0,1fr) minmax(0, 11em); gap: 12px; padding: 10px 14px; border-top: 1px solid var(--line); font-size: 13px; align-items: baseline; }
-.irow:first-child { border-top: 0; }
-.irow .d { font: 500 12px var(--f-data); color: var(--muted); }
-.irow .c { overflow-wrap: anywhere; }
-.irow .s { font-size: 12px; text-align: right; overflow-wrap: anywhere; }
-.irow .s .linkish { font-size: 12px; font-weight: 500; color: var(--ink-2); }
-@media (max-width: 760px) {
-  .irow { grid-template-columns: auto auto minmax(0,1fr); row-gap: 4px; }
-  .irow .c { grid-column: 1 / -1; }
-}
+/* intel ledger */
+.ledger { display: grid; gap: 18px; }
+.lday { display: grid; gap: 0; background: var(--paper); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.lday > .d { padding: 9px 16px; font-size: 13px; color: var(--muted); background: var(--soft); border-bottom: 1px solid var(--line); }
+.lrow { display: grid; grid-template-columns: 9.5em minmax(0,1fr) auto; gap: 14px; padding: 11px 16px; border-top: 1px solid var(--line); align-items: baseline; font-size: 14px; }
+.lrow:first-of-type { border-top: 0; }
+.lrow .c { overflow-wrap: anywhere; }
+.lrow .s { font-size: 12.5px; color: var(--muted); text-align: right; }
+.lrow .s button { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 760px) { .lrow { grid-template-columns: minmax(0,1fr) auto; row-gap: 4px; } .lrow .c { grid-column: 1 / -1; grid-row: 2; } }
+
+/* assistant */
+.chat { display: grid; gap: 14px; max-width: 820px; width: 100%; margin: 0 auto; }
+.msg { display: grid; gap: 10px; max-width: 100%; }
+.msg.me { justify-self: end; max-width: 85%; background: var(--accent-soft); padding: 10px 14px; border-radius: 16px 16px 4px 16px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg.ai { justify-self: start; background: var(--paper); border: 1px solid var(--line); padding: 14px 16px; border-radius: 16px 16px 16px 4px; width: 100%; }
+.msg.ai .txt { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.65; }
+.msg.ai .err { color: var(--stamp); }
+.picks { display: grid; gap: 8px; }
+.pick { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 11px; background: var(--soft); }
+.pick .why { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.pick .nm { font-weight: 600; text-align: left; }
+.pick .acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 560px) { .pick { grid-template-columns: auto minmax(0,1fr); } .pick .acts { grid-column: 1 / -1; justify-content: flex-start; } }
+.suggest { display: flex; flex-wrap: wrap; gap: 8px; }
+.composer { position: sticky; bottom: 0; background: var(--bg); padding-top: 8px; padding-bottom: 8px; }
+@media (max-width: 760px) { .composer { bottom: calc(62px + env(safe-area-inset-bottom, 0px)); } }
+.askbox { display: flex; gap: 8px; align-items: flex-end; background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 8px 8px 8px 14px; box-shadow: var(--shadow); }
+.askbox textarea { flex: 1; border: 0; outline: none; background: none; resize: none; min-height: 24px; max-height: 160px; padding: 6px 0; font-size: 15px; line-height: 1.5; }
+.thinking { color: var(--muted); font-size: 14px; display: inline-flex; gap: 8px; align-items: center; }
+.thinking i { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: blink 1.2s infinite; }
+.thinking i:nth-child(2) { animation-delay: .2s; } .thinking i:nth-child(3) { animation-delay: .4s; }
+@keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
 
 /* sheet */
 .scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 40; }
-.sheet { position: fixed; z-index: 41; top: 0; right: 0; bottom: 0; width: min(600px, 100%); background: var(--bg); border-left: 1px solid var(--line); display: flex; flex-direction: column;
+.sheet { position: fixed; z-index: 41; top: 0; right: 0; bottom: 0; width: min(620px, 100%); background: var(--bg); display: flex; flex-direction: column; box-shadow: -10px 0 40px rgba(0,0,0,.18);
   padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); padding-right: env(safe-area-inset-right, 0px); }
-@media (max-width: 640px) { .sheet { border-left: 0; padding-left: env(safe-area-inset-left, 0px); } }
-.sheet-h { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--surface); }
-.sheet-h h3 { flex: 1; font-size: 15px; min-width: 0; overflow-wrap: anywhere; }
-.sheet-b { overflow-y: auto; padding: 16px; display: grid; gap: 16px; align-content: start; flex: 1; }
-.sec { display: grid; gap: 6px; min-width: 0; }
-.sec > .lbl { font-size: 11px; letter-spacing: .08em; color: var(--muted); }
-.sec > .val { overflow-wrap: anywhere; }
-.pgrid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px 18px; }
-@media (max-width: 520px) { .pgrid { grid-template-columns: minmax(0,1fr); } }
-.dhead { display: grid; gap: 8px; }
-.dhead .t { display: flex; gap: 10px; align-items: center; }
-.dhead h2 { font: 700 21px/1.25 var(--f-display); overflow-wrap: anywhere; }
-.facts { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--ink-2); align-items: center; }
-.box { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 10px; min-width: 0; }
-.ver { background: var(--accent-wash); border-radius: 8px; padding: 10px 12px; white-space: pre-wrap; overflow-wrap: anywhere; display: grid; gap: 8px; }
-.ver .btn { justify-self: start; }
+@media (max-width: 640px) { .sheet { padding-left: env(safe-area-inset-left, 0px); } }
+.sheet-h { display: flex; align-items: center; gap: 10px; padding: 10px 12px 10px 18px; background: var(--paper); border-bottom: 1px solid var(--line); }
+.sheet-h h3 { flex: 1; min-width: 0; font: 400 18px/1.2 var(--f-display); overflow-wrap: anywhere; }
+.sheet-b { overflow-y: auto; padding: 18px; display: grid; gap: 18px; align-content: start; flex: 1; }
+.panel { background: var(--paper); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.panel > .lbl, .lbl { font: 400 12px/1 var(--f-type); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.kv { display: grid; gap: 4px; min-width: 0; }
+.kv .v { overflow-wrap: anywhere; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px 18px; }
+@media (max-width: 520px) { .grid2 { grid-template-columns: minmax(0,1fr); } }
+.dcard { padding: 18px 18px 16px; background-image: none; }
+.dcard .nm { font: 400 26px/1.15 var(--f-display); overflow-wrap: anywhere; }
+.facts { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; align-items: center; line-height: 26px; }
+.acts { display: flex; flex-wrap: wrap; gap: 8px; }
 .tl { display: grid; }
-.tli { display: grid; grid-template-columns: 6.4em minmax(0,1fr); gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 13px; }
+.tli { display: grid; grid-template-columns: 6.6em minmax(0,1fr); gap: 12px; padding: 9px 0; border-top: 1px solid var(--line); font-size: 14px; }
 .tli:first-child { border-top: 0; }
-.tli .d { font: 500 12px var(--f-data); color: var(--muted); }
-.tli .k { font-size: 11px; color: var(--muted); margin-right: 6px; }
-.copyable { user-select: all; font-family: var(--f-data); }
+.tli .d { font-size: 12.5px; color: var(--muted); }
+.tli .k { font-size: 12px; color: var(--muted); margin-right: 6px; }
+.copyable { user-select: all; font-family: var(--f-type); }
+
+/* composer (opener) */
+.modes { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 6px; }
+@media (max-width: 520px) { .modes { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+.modes button { display: grid; gap: 2px; justify-items: start; padding: 9px 10px; border-radius: 11px; border: 1px solid var(--line); background: var(--paper); text-align: left; }
+.modes button b { font-size: 14px; display: inline-flex; align-items: center; gap: 6px; }
+.modes button b::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--mc); }
+.modes button span { font-size: 11.5px; color: var(--muted); line-height: 1.3; }
+.modes button[aria-pressed="true"] { border-color: var(--mc); box-shadow: inset 0 0 0 1px var(--mc); background: var(--soft); }
+.opt { background: var(--card); color: var(--card-ink); border-radius: 8px; padding: 14px 16px; display: grid; gap: 10px; box-shadow: var(--shadow); }
+.opt .lab { font: 400 12px/1 var(--f-type); text-transform: uppercase; letter-spacing: .05em; opacity: .7; }
+.opt .txt { font-size: 16px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.opt textarea { width: 100%; min-height: 84px; border: 1px solid var(--card-line); border-radius: 8px; background: var(--paper); color: var(--ink); padding: 10px 12px; font-size: 15px; line-height: 1.55; resize: vertical; }
+.opt .acts .btn.line { background: var(--paper); }
 
 /* forms */
 form { display: grid; gap: 14px; }
-.field { display: grid; gap: 5px; min-width: 0; }
-.field label, .field .lbl { font-size: 12px; color: var(--ink-2); }
+.field { display: grid; gap: 6px; min-width: 0; }
+.field > label, .field > .lb { font-size: 13px; color: var(--muted); font-weight: 500; }
+.field input[type="text"], .field input[type="email"], .field input[type="password"], .field input[type="date"], .field input[type="tel"], .field input[type="number"], .field select, .field textarea {
+  width: 100%; min-height: 42px; padding: 9px 12px; border-radius: 11px; border: 1px solid var(--line); background: var(--paper); font-size: 15px; }
+.field textarea { min-height: 80px; resize: vertical; line-height: 1.55; }
 .frow { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
 @media (max-width: 520px) { .frow { grid-template-columns: minmax(0,1fr); } }
 .radio { display: flex; flex-wrap: wrap; gap: 6px; }
 .radio input { position: absolute; opacity: 0; pointer-events: none; }
-.radio label { border: 1px solid var(--line); background: var(--surface); padding: 5px 12px; border-radius: 999px; font-size: 13px; cursor: pointer; color: var(--ink-2); }
-.radio input:checked + label { border-color: var(--accent); background: var(--accent-wash); color: var(--ink); }
-.radio input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
+.radio label { min-height: 36px; display: inline-flex; align-items: center; padding: 6px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper); font-size: 14px; color: var(--muted); cursor: pointer; }
+.radio input:checked + label { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); }
+.radio input:focus-visible + label { outline: 2px solid var(--focus); outline-offset: 2px; }
 .formfoot { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
-.err { color: var(--critical); font-size: 12px; }
-.hint { font-size: 12px; color: var(--muted); }
+.err { color: var(--stamp); font-size: 13px; }
+.hint { font-size: 13px; color: var(--muted); }
+.cad { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 14px; }
+.cad input { width: 64px; min-height: 38px; text-align: center; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
 
-/* gate (setup / sign-in) */
-.gate { min-height: 80vh; display: grid; place-items: center; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 32px; }
-.gate .box { width: min(400px, 100%); padding: 24px; gap: 14px; }
-.gate h1 { font: 700 26px/1.2 var(--f-display); }
-.gate ol { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; font-size: 13px; color: var(--ink-2); }
+/* gates */
+.gate { min-height: 88vh; display: grid; place-items: center; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 32px; }
+.gate .panel { width: min(420px, 100%); padding: 26px; gap: 16px; }
+.gate h1 { font: 400 34px/1.1 var(--f-display); }
+.gate .tag { font: 600 22px/1.1 var(--f-hand); color: var(--brass); }
 
-/* banner, fab, toast */
-.banner { max-width: 1120px; margin: 0 auto 14px; padding: 12px 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); font-size: 13px; color: var(--ink-2); }
-.fab { position: fixed; z-index: 25; right: max(16px, calc(env(safe-area-inset-right, 0px) + 12px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); box-shadow: 0 6px 18px rgba(0,0,0,.18); padding: 12px 18px; border-radius: 999px; font-size: 14px; }
-@media (min-width: 761px) { .fab { display: none; } }
-@media (max-width: 760px) { .bar .rec { display: none; } }
-.toast { position: fixed; z-index: 60; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); background: var(--ink); color: var(--bg); padding: 9px 14px; border-radius: 8px; font-size: 13px; max-width: calc(100% - 32px); }
-.skeleton { color: var(--muted); font-size: 13px; padding: 30px 0; text-align: center; }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+/* banner, toast */
+.banner { max-width: 1160px; margin: 0 auto 16px; padding: 12px 16px; border-radius: 12px; background: var(--paper); border: 1px solid var(--line); font-size: 14px; }
+.toast { position: fixed; z-index: 60; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 84px); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 11px; font-size: 14px; max-width: calc(100% - 32px); box-shadow: var(--shadow); }
+.skeleton { color: var(--muted); padding: 40px 0; text-align: center; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } .stamp.over, .stamp.today { transform: none; } }
 </style>
 </head>
 <body>
 
-<!-- setup / sign-in -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+  <symbol id="i-today" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></symbol>
+  <symbol id="i-people" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M8 6V4h8v2"/><circle cx="9" cy="14.5" r="1.6"/><path d="M13 14h5M13 16.5h3"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5M8 7h7M8 11h7"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.7 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/></symbol>
+</svg>
+
 <div class="gate" id="gate-setup" hidden>
-  <div class="box">
-    <h1>镍圈客户簿</h1>
-    <p class="hint">还没连上 Supabase。按仓库里 README 的步骤建好项目，再把 config.js 里的地址和公开 key 填上。</p>
-  </div>
+  <div class="panel"><h1>镍圈客户簿</h1><p class="hint">还没连上 Supabase。按 README 建好项目后，把 config.js 里的地址和公开 key 填上。</p></div>
 </div>
 <div class="gate" id="gate-auth" hidden>
-  <form class="box" id="f-auth" novalidate>
-    <h1>镍圈客户簿</h1>
+  <form class="panel" id="f-auth" novalidate>
+    <div><h1>镍圈客户簿</h1><p class="tag">give first, then ask.</p></div>
     <p class="hint" id="auth-hint">登录后才能看到你的客户。</p>
     <div class="field"><label for="au-e">邮箱</label><input type="email" id="au-e" name="email" autocomplete="username" required></div>
     <div class="field"><label for="au-p">密码</label><input type="password" id="au-p" name="password" autocomplete="current-password" minlength="8" required></div>
     <p class="err" id="au-err" hidden></p>
-    <div class="formfoot" style="justify-content:space-between">
-      <button class="btn ghost" type="button" id="au-switch">第一次用？注册账号</button>
-      <button class="btn primary" type="submit" id="au-go">登录</button>
-    </div>
+    <div class="formfoot" style="justify-content:space-between"><button class="btn ghost" type="button" id="au-switch">第一次用？注册账号</button><button class="btn" type="submit" id="au-go">登录</button></div>
   </form>
 </div>
 
 <div id="app" hidden>
-<header class="bar">
-  <div class="bar-in">
-    <div class="brand">镍圈客户簿<small>NPI · Ni · SS</small></div>
+<header class="top">
+  <div class="top-in">
+    <div class="logo"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1f5c47"/><rect x="12" y="18" width="40" height="28" rx="4" fill="#f4ebcf"/><rect x="12" y="18" width="40" height="7" rx="3" fill="#7cc7a3"/><rect x="17" y="31" width="22" height="3" rx="1.5" fill="#1f5c47"/><rect x="17" y="37" width="14" height="3" rx="1.5" fill="#a87b22"/><rect x="28" y="46" width="8" height="8" fill="#e2b45c"/></svg><b>客户簿</b></div>
     <nav class="tabs" role="tablist" aria-label="视图">
-      <button class="tab" role="tab" id="tab-due" aria-selected="true" data-view="due">跟进<span class="badge" id="due-badge" hidden></span></button>
-      <button class="tab" role="tab" id="tab-contacts" aria-selected="false" data-view="contacts">客户</button>
-      <button class="tab" role="tab" id="tab-intel" aria-selected="false" data-view="intel">情报</button>
+      <button class="tab" role="tab" id="tab-today" data-view="today" aria-selected="true">今天<span class="badge" id="badge-today" hidden></span></button>
+      <button class="tab" role="tab" id="tab-people" data-view="people" aria-selected="false">客户</button>
+      <button class="tab" role="tab" id="tab-intel" data-view="intel" aria-selected="false">情报</button>
+      <button class="tab" role="tab" id="tab-ask" data-view="ask" aria-selected="false">参谋</button>
     </nav>
-    <span class="spacer"></span>
-    <button class="btn primary rec" type="button" id="btn-rec-top">＋ 快速记录</button>
-    <button class="btn ghost" type="button" id="btn-settings">设置</button>
+    <span class="grow"></span>
+    <button class="btn rec" type="button" id="btn-rec"><svg class="i"><use href="#i-plus"/></svg>记一笔</button>
+    <button class="icon-btn" type="button" id="btn-settings" aria-label="设置"><svg class="i"><use href="#i-gear"/></svg></button>
   </div>
 </header>
 
 <main>
   <div class="banner" id="banner" hidden></div>
 
-  <section class="view" id="view-due" aria-labelledby="tab-due">
-    <div class="vhead">
-      <div><h2>今天该联系谁</h2><p>按分级的联系节奏，距离上次聊过已经到期的人排在前面。</p></div>
-      <div class="stats" id="due-stats"></div>
+  <section class="view" id="view-today">
+    <div class="hero">
+      <p class="date type" id="today-date"></p>
+      <h1 id="today-title">今天联系谁</h1>
+      <p class="tag">give first, then ask.</p>
     </div>
-    <div class="cadence" id="cadence">
-      <span>联系节奏：</span>
-      <label for="cad-A">A 级每</label><input id="cad-A" type="number" min="1" max="90" inputmode="numeric"><span>天</span>
-      <label for="cad-B">· B 级每</label><input id="cad-B" type="number" min="1" max="90" inputmode="numeric"><span>天</span>
-      <label for="cad-C">· C 级每</label><input id="cad-C" type="number" min="1" max="180" inputmode="numeric"><span>天</span>
-      <span class="muted">· D 级不提醒</span>
-    </div>
-    <div id="due-body"><div class="skeleton">正在读取你的客户…</div></div>
+    <div class="stats" id="today-stats"></div>
+    <div id="today-body"><div class="skeleton">正在翻你的客户簿…</div></div>
   </section>
 
-  <section class="view" id="view-contacts" aria-labelledby="tab-contacts" hidden>
-    <div class="vhead">
-      <div><h2>客户</h2><p>点任意一行看资料、记录和情报。</p></div>
-      <button class="btn" type="button" id="btn-new-contact">＋ 新客户</button>
-    </div>
+  <section class="view" id="view-people" hidden>
+    <div class="sec-h"><h2>客户</h2><span class="n" id="p-count"></span><span class="grow"></span><button class="btn line sm" type="button" id="btn-new-contact"><svg class="i"><use href="#i-plus"/></svg>新客户</button></div>
     <div class="toolbar">
-      <input type="search" id="c-q" placeholder="搜名字、公司、他能给什么…" aria-label="搜索客户">
-      <div class="chips" id="c-tier" aria-label="分级"></div>
-      <div class="chips" id="c-stage" aria-label="状态"></div>
-      <select id="c-seg" aria-label="产业链位置"><option value="">全部产业链</option></select>
-      <select id="c-rel" aria-label="关系类型"><option value="">全部关系</option></select>
-      <span class="count" id="c-count"></span>
+      <label class="search"><svg class="i"><use href="#i-search"/></svg><input type="search" id="p-q" placeholder="名字、公司、他能给什么…" aria-label="搜索客户"></label>
+      <div class="chips" id="p-tier" aria-label="分级"></div>
+      <div class="chips" id="p-stage" aria-label="状态"></div>
+      <select id="p-seg" aria-label="产业链位置"><option value="">全部产业链</option></select>
+      <select id="p-rel" aria-label="关系类型"><option value="">全部关系</option></select>
     </div>
-    <div class="list" id="c-list"><div class="skeleton">正在读取…</div></div>
+    <div class="list" id="p-list"><div class="skeleton">正在读取…</div></div>
   </section>
 
-  <section class="view" id="view-intel" aria-labelledby="tab-intel" hidden>
-    <div class="vhead">
-      <div><h2>情报</h2><p>每条价格、成交、排产和政策消息，带来源和日期，方便交叉核对。</p></div>
-      <button class="btn" type="button" id="btn-new-intel">＋ 记一条情报</button>
-    </div>
+  <section class="view" id="view-intel" hidden>
+    <div class="sec-h"><h2>情报</h2><span class="n" id="i-count"></span><span class="grow"></span><button class="btn line sm" type="button" id="btn-new-intel"><svg class="i"><use href="#i-plus"/></svg>记一条情报</button></div>
     <div class="toolbar">
-      <input type="search" id="i-q" placeholder="搜内容或来源…" aria-label="搜索情报">
+      <label class="search"><svg class="i"><use href="#i-search"/></svg><input type="search" id="i-q" placeholder="搜内容或来源…" aria-label="搜索情报"></label>
       <div class="chips" id="i-cat" aria-label="品类"></div>
-      <span class="count" id="i-count"></span>
     </div>
-    <div class="intel" id="i-list"><div class="skeleton">正在读取…</div></div>
+    <div class="ledger" id="i-list"><div class="skeleton">正在读取…</div></div>
+  </section>
+
+  <section class="view" id="view-ask" hidden>
+    <div class="chat" id="chat"></div>
+    <div class="chat composer">
+      <form class="askbox" id="f-ask" novalidate>
+        <textarea id="ask-q" rows="1" placeholder="问参谋：今天先找谁？谁能给我废钢价格？" aria-label="问参谋"></textarea>
+        <button class="btn" type="submit" id="ask-go" aria-label="发送"><svg class="i"><use href="#i-send"/></svg></button>
+      </form>
+    </div>
   </section>
 </main>
 
-<button class="btn primary fab" type="button" id="btn-rec-fab">＋ 快速记录</button>
+<nav class="bnav" aria-label="视图">
+  <button type="button" data-view="today" aria-selected="true"><svg class="i"><use href="#i-today"/></svg>今天<span class="badge" id="badge-today-m" hidden></span></button>
+  <button type="button" data-view="people" aria-selected="false"><svg class="i"><use href="#i-people"/></svg>客户</button>
+  <button type="button" class="plus" id="btn-rec-m" aria-label="记一笔"><span class="p"><svg class="i"><use href="#i-plus"/></svg></span>记一笔</button>
+  <button type="button" data-view="intel" aria-selected="false"><svg class="i"><use href="#i-book"/></svg>情报</button>
+  <button type="button" data-view="ask" aria-selected="false"><svg class="i"><use href="#i-chat"/></svg>参谋</button>
+</nav>
 </div>
 
 <div class="scrim" id="scrim" hidden></div>
 <aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" hidden>
-  <div class="sheet-h"><h3 id="sheet-title"></h3><button class="btn ghost" type="button" id="sheet-close" aria-label="关闭">关闭</button></div>
+  <div class="sheet-h"><h3 id="sheet-title"></h3><button class="icon-btn" type="button" id="sheet-close" aria-label="关闭"><svg class="i"><use href="#i-x"/></svg></button></div>
   <div class="sheet-b" id="sheet-body"></div>
 </aside>
 <div class="toast" id="toast" role="status" hidden></div>
@@ -335,29 +395,44 @@ function createSupabaseApi(){
   const must = ({ data, error }) => { if (error) throw error; return data; };
   const strip = o => { const r = { ...o }; delete r.userId; delete r.user_id; return r; };
   const chunks = (a, n) => Array.from({ length: Math.ceil(a.length / n) }, (_, i) => a.slice(i * n, i * n + n));
+  const fn = async (name, body, signal) => {
+    const s = (await sb.auth.getSession()).data.session;
+    const r = await fetch(cfg.supabaseUrl.replace(/\/$/, "") + "/functions/v1/" + name, {
+      method: "POST", signal,
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + (s && s.access_token), apikey: cfg.supabaseAnonKey },
+      body: JSON.stringify(body),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || d.message || ("服务返回 " + r.status));
+    return d;
+  };
   return {
     async session(){ return (await sb.auth.getSession()).data.session; },
-    onAuth(fn){ sb.auth.onAuthStateChange((_e, s) => fn(s)); },
+    onAuth(f){ sb.auth.onAuthStateChange((_e, s) => f(s)); },
     async signIn(email, password){ const { error } = await sb.auth.signInWithPassword({ email, password }); if (error) throw error; },
     async signUp(email, password){ const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: location.origin + location.pathname } }); if (error) throw error; return !!data.session; },
     async signOut(){ await sb.auth.signOut(); },
     async loadAll(){
-      const [c, l, i, s] = await Promise.all([
+      const [c, l, i, s, e] = await Promise.all([
         sb.from("contacts").select("*").limit(1000),
         sb.from("logs").select("*").order("date", { ascending: false }).order("created_at", { ascending: false }).limit(1000),
         sb.from("intel").select("*").order("date", { ascending: false }).order("created_at", { ascending: false }).limit(1000),
         sb.from("settings").select("*").maybeSingle(),
+        sb.from("style_examples").select("source", { count: "exact", head: false }).neq("source", "聊天导入").limit(1),
       ]);
-      return { contacts: must(c).map(camel), logs: must(l).map(camel), intel: must(i).map(camel), cadence: must(s)?.cadence || null };
+      const st = must(s);
+      return { contacts: must(c).map(camel), logs: must(l).map(camel), intel: must(i).map(camel),
+        cadence: st && st.cadence || null, styleProfile: st && st.style_profile || "", learned: e.count || 0 };
     },
     async addLog(r){ must(await sb.from("logs").insert(snake(r))); },
     async addIntel(r){ must(await sb.from("intel").insert(snake(r))); },
+    async addStyle(r){ must(await sb.from("style_examples").insert(snake(r))); },
     async insertContact(r){ must(await sb.from("contacts").insert(snake(r))); },
     async updateContact(id, patch){ must(await sb.from("contacts").update(snake(patch)).eq("id", id)); },
-    async saveCadence(cad){ const s = await this.session(); must(await sb.from("settings").upsert({ user_id: s.user.id, cadence: cad, updated_at: new Date().toISOString() })); },
+    async saveSettings(patch){ const s = await this.session(); must(await sb.from("settings").upsert({ user_id: s.user.id, ...snake(patch), updated_at: new Date().toISOString() })); },
     async importData(file, progress){
-      const contacts = (file.contacts || []).map(strip), logs = (file.logs || []).map(strip), intel = (file.intel || []).map(strip);
-      let done = 0; const total = contacts.length + logs.length + intel.length;
+      const contacts = (file.contacts || []).map(strip), logs = (file.logs || []).map(strip), intel = (file.intel || []).map(strip), styles = (file.styleExamples || []).map(strip);
+      let done = 0; const total = contacts.length + logs.length + intel.length + styles.length;
       for (const part of chunks(contacts, 100)) { must(await sb.from("contacts").upsert(part.map(snake), { onConflict: "id" })); done += part.length; progress(done, total); }
       const logsWithId = logs.filter(r => r.id);
       for (const part of chunks(logsWithId, 200)) { must(await sb.from("logs").upsert(part.map(snake), { onConflict: "id" })); done += part.length; progress(done, total); }
@@ -367,19 +442,21 @@ function createSupabaseApi(){
         const { count } = await sb.from("intel").select("id", { count: "exact", head: true }).eq("source", "聊天导入");
         if (!count) for (const part of chunks(intelNew, 200)) { must(await sb.from("intel").insert(part.map(snake))); done += part.length; progress(done, total); }
       }
-      return { contacts: contacts.length, logs: logsWithId.length, intel: intel.length };
+      if (styles.length) {
+        must(await sb.from("style_examples").delete().eq("source", "聊天导入"));
+        for (const part of chunks(styles.filter(r => r.source === "聊天导入"), 200)) { must(await sb.from("style_examples").insert(part.map(snake))); done += part.length; progress(done, total); }
+        const own = styles.filter(r => r.source !== "聊天导入" && r.id);
+        for (const part of chunks(own, 200)) { must(await sb.from("style_examples").upsert(part.map(snake), { onConflict: "id" })); done += part.length; progress(done, total); }
+      }
+      if (file.styleProfile) {
+        const cur = must(await sb.from("settings").select("style_profile").maybeSingle());
+        if (!cur || !cur.style_profile) await this.saveSettings({ styleProfile: file.styleProfile });
+      }
+      return { contacts: contacts.length, logs: logsWithId.length, intel: intel.length, styles: styles.length };
     },
-    async opener(prompt, signal){
-      const s = await this.session();
-      const r = await fetch(cfg.supabaseUrl.replace(/\/$/, "") + "/functions/v1/opener", {
-        method: "POST", signal,
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + s.access_token, apikey: cfg.supabaseAnonKey },
-        body: JSON.stringify({ prompt }),
-      });
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(d.error || d.message || ("开场白服务返回 " + r.status));
-      return d.text;
-    },
+    async exportStyles(){ return must(await sb.from("style_examples").select("*").limit(5000)).map(camel); },
+    async opener(contactId, mode, note, signal){ return fn("opener", { contactId, mode, note }, signal); },
+    async agent(messages, signal){ return fn("agent", { messages }, signal); },
   };
 }
 </script>
@@ -388,16 +465,26 @@ function createSupabaseApi(){
 "use strict";
 const TIERS = ["A","B","C","D"];
 const STAGES = ["活跃","降温","沉睡","从未回复"];
-const STAGE_C = {"活跃":"var(--good)","降温":"var(--warn)","沉睡":"var(--serious)","从未回复":"var(--none)"};
+const STAGE_C = {"活跃":"var(--ok)","降温":"var(--warn)","沉睡":"var(--stamp)","从未回复":"var(--muted)"};
 const CATS = ["NPI/镍铁","不锈钢","纯镍/LME","印尼政策/矿","MHP/高冰/新能源","废钢/铬","海外/贸易","其他"];
+const CAT_C = {"NPI/镍铁":"var(--k-ask)","不锈钢":"var(--k-view)","纯镍/LME":"var(--k-other)","印尼政策/矿":"var(--k-chat)","MHP/高冰/新能源":"var(--k-meet)","废钢/铬":"var(--k-follow)","海外/贸易":"var(--k-red)","其他":"var(--muted)"};
 const SEGS = ["镍铁/NPI冶炼","新能源镍材料","不锈钢钢厂","国际贸易商/大宗供应链","不锈钢现货贸易/加工","海外钢厂/海外终端","废不锈钢/再生金属","物流/仓储","金融/投资/期货","资讯/咨询/数据同行","其他/未知"];
 const RELS = ["核心信息源","观点交流伙伴","需求方","商务对接","私交化","被动接收者","未激活"];
 const CHANNELS = ["微信","电话","见面"];
+const MODES = [
+  {k:"询价", c:"var(--k-ask)", d:"先亮牌，再问价"},
+  {k:"日常闲聊", c:"var(--k-chat)", d:"像朋友一样聊"},
+  {k:"分享观点", c:"var(--k-view)", d:"先给判断，再问他"},
+  {k:"约见面", c:"var(--k-meet)", d:"电话、咖啡、拜访"},
+  {k:"回访跟进", c:"var(--k-follow)", d:"接住上次的话"},
+];
+const MODE_C = Object.fromEntries(MODES.map(m => [m.k, m.c]));
 const DEFAULT_CAD = {A:3, B:7, C:30};
+const SUGGEST = ["今天先联系谁？按优先级排 5 个", "这周 NPI 询价找谁最准？", "谁很久没聊但值得捡回来？", "谁能给我废不锈钢的价格？", "最近有哪些情报互相矛盾，需要找人核实？"];
 
 const API = window.CRM_TEST_API || createSupabaseApi();
-const S = { contacts:new Map(), logs:[], intel:[], cad:{...DEFAULT_CAD}, loaded:false, view:"due", showC:false, user:null,
-  cf:{q:"", tiers:new Set(), stages:new Set(), seg:"", rel:""}, inf:{q:"", cats:new Set()}, sheet:null };
+const S = { contacts:new Map(), logs:[], intel:[], cad:{...DEFAULT_CAD}, profile:"", learned:0, loaded:false, view:"today", showC:false, user:null,
+  pf:{q:"", tiers:new Set(), stages:new Set(), seg:"", rel:""}, inf:{q:"", cats:new Set()}, sheet:null, chat:[], asking:null };
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -407,26 +494,36 @@ const today = () => ymd(new Date());
 const parse = s => { const [y,m,d] = String(s).slice(0,10).split("-").map(Number); return new Date(y, m-1, d); };
 const addDays = (s,n) => { const d = parse(s); d.setDate(d.getDate()+n); return ymd(d); };
 const diff = (a,b) => Math.round((parse(a) - parse(b)) / 864e5);
-const short = s => s ? String(s).slice(2,10).replace(/-/g,"/") : "—";
+const short = s => s ? String(s).slice(5,10).replace("-","/") : "—";
+const day10 = s => String(s || "").slice(0,10);
+const ico = (n, cls) => `<svg class="i${cls?" "+cls:""}"><use href="#i-${n}"/></svg>`;
 
 /* ---------- derived ---------- */
-function lastTouch(c){ return c.lastTouch || c.lastTheir || null; }
+const lastTouch = c => c.lastTouch || c.lastTheir || null;
 function stage(c){ const l = lastTouch(c); if (!l) return "从未回复"; const d = diff(today(), l); return d <= 30 ? "活跃" : d <= 90 ? "降温" : "沉睡"; }
 function dueDate(c){
-  if (c.nextDue) return c.nextDue;
+  if (c.nextDue) return day10(c.nextDue);
   if (c.tier === "D" || !S.cad[c.tier]) return null;
   const l = lastTouch(c); if (!l) return today();
   return addDays(l, Number(S.cad[c.tier]) || DEFAULT_CAD[c.tier]);
 }
-function dueChip(c){
+function dueStamp(c){
   const d = dueDate(c); if (!d) return "";
   const n = diff(today(), d);
-  if (n > 0) return `<span class="due over">超期 ${n} 天</span>`;
-  if (n === 0) return `<span class="due today">今天</span>`;
-  return `<span class="due soon">${-n} 天后</span>`;
+  if (n > 0) return `<span class="stamp over">超期 ${n} 天</span>`;
+  if (n === 0) return `<span class="stamp today">今天</span>`;
+  return `<span class="stamp soon">${-n} 天后</span>`;
+}
+function suggestMode(c){
+  if (c.nextNote) return "回访跟进";
+  if (c.relation === "私交化") return "日常闲聊";
+  if (c.relation === "观点交流伙伴") return "分享观点";
+  if (c.relation === "被动接收者" || c.relation === "未激活") return stage(c) === "活跃" ? "分享观点" : "日常闲聊";
+  return "询价";
 }
 const tierB = (t, sm) => `<span class="tier ${esc(t)}${sm?" sm":""}" aria-label="${esc(t)} 级">${esc(t)}</span>`;
 const stageP = c => { const s = stage(c); return `<span class="pill"><i class="dot" style="background:${STAGE_C[s]}"></i>${s}</span>`; };
+const modeP = m => `<span class="mode" style="--mc:${MODE_C[m] || "var(--k-other)"}">${esc(m)}</span>`;
 const nextText = c => c.nextNote || c.next || "";
 const byId = id => S.contacts.get(id);
 const logsOf = id => S.logs.filter(l => l.contactId === id);
@@ -435,128 +532,118 @@ const intelOf = id => S.intel.filter(i => i.contactId === id);
 /* ---------- toast & banner ---------- */
 let toastT;
 function toast(msg){ const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600); }
-function banner(html){ const b = $("banner"); b.innerHTML = html; b.hidden = !html; }
+function banner(msg){ const b = $("banner"); b.textContent = msg || ""; b.hidden = !msg; }
 function errText(e){
   const m = String(e && (e.message || e.error_description || e) || "");
   if (/Failed to fetch|NetworkError|network/i.test(m)) return "网络连不上，检查一下网络再试。";
-  if (/JWT|session|expired/i.test(m)) return "登录过期了，退出后重新登录。";
-  return m ? "没保存上：" + m : "没保存上，稍后再试。";
+  if (/JWT|session|expired|请先登录/i.test(m)) return "登录过期了，退出后重新登录。";
+  return m || "出错了，稍后再试。";
 }
 
-/* ---------- data refresh ---------- */
+/* ---------- data ---------- */
 async function refresh(){
   try {
     const d = await API.loadAll();
     S.contacts = new Map(d.contacts.map(c => [c.id, c]));
-    S.logs = d.logs; S.intel = d.intel;
+    S.logs = d.logs; S.intel = d.intel; S.profile = d.styleProfile || ""; S.learned = d.learned || 0;
     if (d.cadence) S.cad = { A:+d.cadence.A||3, B:+d.cadence.B||7, C:+d.cadence.C||30 };
     S.loaded = true; banner(""); render();
-  } catch (e) { banner(esc(errText(e)).replace("没保存上：","读取失败：")); }
+  } catch (e) { banner("读取失败：" + errText(e)); }
 }
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && S.user && !S.sheet) refresh(); });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && S.user && !S.sheet && !S.asking) refresh(); });
 
 /* ---------- views ---------- */
 function setView(v){
   S.view = v;
-  for (const k of ["due","contacts","intel"]) { $("view-"+k).hidden = k !== v; $("tab-"+k).setAttribute("aria-selected", String(k === v)); }
+  for (const k of ["today","people","intel","ask"]) { $("view-"+k).hidden = k !== v; $("tab-"+k).setAttribute("aria-selected", String(k === v)); }
+  document.querySelectorAll(".bnav [data-view]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.view === v)));
   try { localStorage.setItem("crm.view", v); } catch(_) {}
   render();
+  if (v === "ask") setTimeout(() => $("ask-q").focus(), 50);
 }
-document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => setView(b.dataset.view)));
+document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => setView(b.dataset.view)));
 
 function render(){
   renderBadge();
-  if (S.view === "due") renderDue();
-  if (S.view === "contacts") renderContacts();
+  if (S.view === "today") renderToday();
+  if (S.view === "people") renderPeople();
   if (S.view === "intel") renderIntel();
+  if (S.view === "ask") renderChat();
   if (S.sheet && S.sheet.type === "detail") renderDetail(S.sheet.id);
 }
 function renderBadge(){
   const n = [...S.contacts.values()].filter(c => { const d = dueDate(c); return d && c.tier !== "C" && diff(today(), d) >= 0; }).length;
-  const b = $("due-badge"); b.textContent = n; b.hidden = !S.loaded || n === 0;
+  for (const id of ["badge-today","badge-today-m"]) { const b = $(id); b.textContent = n; b.hidden = !S.loaded || n === 0; }
 }
 
-/* ---------- 跟进 ---------- */
-function renderDue(){
-  for (const t of ["A","B","C"]) { const el = $("cad-"+t); if (document.activeElement !== el) el.value = S.cad[t]; }
+/* ---------- 今天 ---------- */
+function renderToday(){
+  const wd = ["周日","周一","周二","周三","周四","周五","周六"][new Date().getDay()];
+  $("today-date").textContent = new Date().toLocaleDateString("en-GB", {weekday:"short", day:"2-digit", month:"short", year:"numeric"}) + " · " + wd;
   if (!S.loaded) return;
   const all = [...S.contacts.values()];
   if (!all.length) {
-    $("due-stats").innerHTML = "";
-    $("due-body").innerHTML = `<div class="empty"><p>还没有客户。到「设置」里导入 crm-seed.json，或者在「客户」里加第一位。</p><button class="btn primary" type="button" data-settings="1">去导入</button></div>`;
+    $("today-title").textContent = "客户簿还是空的";
+    $("today-stats").innerHTML = "";
+    $("today-body").innerHTML = `<div class="empty"><p class="hand">第一张卡片从这里开始</p><p>到「设置」里导入 crm-seed.json，或者在「客户」里加第一位。</p><button class="btn" type="button" data-settings="1">去导入</button></div>`;
     return;
   }
   const t = today();
   const due = all.filter(c => { const d = dueDate(c); return d && diff(t, d) >= 0; })
     .sort((a,b) => (TIERS.indexOf(a.tier) - TIERS.indexOf(b.tier)) || (diff(t, dueDate(b)) - diff(t, dueDate(a))));
-  const soon = all.filter(c => { const d = dueDate(c); return d && diff(d, t) > 0 && diff(d, t) <= 7; })
-    .sort((a,b) => dueDate(a).localeCompare(dueDate(b)));
-  const doneWeek = new Set(S.logs.filter(l => l.date >= addDays(t, -6)).map(l => l.contactId)).size;
-  const cnt = k => due.filter(c => c.tier === k).length;
-  $("due-stats").innerHTML = [[cnt("A")+cnt("B"), "A/B 级到期"], [cnt("C"), "C 级到期"], [soon.length, "7 天内到期"], [doneWeek, "本周已记录的人"]]
-    .map(([v,l]) => `<div class="stat"><span class="v">${v}</span><span class="l">${l}</span></div>`).join("");
-  const card = c => `<article class="card">
-      <div class="card-top">${tierB(c.tier)}<div class="who"><button class="linkish" type="button" data-open="${esc(c.id)}">${esc(c.name)}</button><span class="sub">${esc(c.company || "公司未填")}</span></div>${dueChip(c)}</div>
-      <div class="sub">上次聊过 <span class="num">${short(lastTouch(c))}</span> · ${stageP(c)}${c.relation ? " · "+esc(c.relation) : ""}</div>
-      ${nextText(c) ? `<p class="nx">${esc(nextText(c))}</p>` : ""}
-      <div class="acts">
-        <button class="btn sm" type="button" data-opener="${esc(c.id)}">写开场白</button>
-        <button class="btn sm" type="button" data-log="${esc(c.id)}">记录</button>
-        <button class="btn sm ghost" type="button" data-touch="${esc(c.id)}" title="今天聊过，不写详细记录">✓ 今天聊过</button>
-      </div></article>`;
+  const soon = all.filter(c => { const d = dueDate(c); return d && diff(d, t) > 0 && diff(d, t) <= 7; }).sort((a,b) => dueDate(a).localeCompare(dueDate(b)));
+  const doneWeek = new Set(S.logs.filter(l => day10(l.date) >= addDays(t, -6)).map(l => l.contactId)).size;
+  const ab = due.filter(c => c.tier === "A" || c.tier === "B").length;
+  $("today-title").textContent = ab ? `今天联系 ${ab} 位` : "核心客户都聊过了";
+  $("today-stats").innerHTML = [[ab, "A/B 到期"], [due.filter(c => c.tier === "C").length, "C 级到期"], [soon.length, "7 天内"], [doneWeek, "本周记过"]]
+    .map(([v,l]) => `<span class="stat"><b>${v}</b>${l}</span>`).join("");
+  const card = c => { const m = suggestMode(c); return `<article class="icard">
+      <div class="head">${tierB(c.tier)}<div class="who"><button class="nm" type="button" data-open="${esc(c.id)}">${esc(c.name)}</button></div>${dueStamp(c)}</div>
+      <div class="co">${esc(c.company || "公司未填")}${c.role ? " · " + esc(c.role) : ""}</div>
+      <div class="meta"><span class="type">上次 ${short(lastTouch(c))}</span>${stageP(c)}${modeP(m)}</div>
+      ${nextText(c) ? `<p class="note">${esc(nextText(c))}</p>` : ""}
+      <div class="acts"><button class="btn sm" type="button" data-compose="${esc(c.id)}" data-mode="${esc(m)}">${ico("pen")}写开场白</button><button class="btn line sm" type="button" data-log="${esc(c.id)}">记一笔</button><button class="btn ghost sm" type="button" data-touch="${esc(c.id)}">${ico("check")}聊过了</button></div>
+    </article>`; };
   const grp = (k, label) => {
     const L = due.filter(c => c.tier === k); if (!L.length) return "";
     const hide = k === "C" && !S.showC;
-    return `<div class="group"><div class="group-h">${tierB(k)}<strong>${label}</strong><span>${L.length} 人到期</span>${k==="C" ? `<button class="btn sm ghost" type="button" id="toggle-c">${S.showC ? "收起" : "展开"}</button>` : ""}</div>${hide ? "" : `<div class="cards">${L.map(card).join("")}</div>`}</div>`;
+    return `<section class="view" style="gap:14px"><div class="sec-h">${tierB(k)}<h2>${label}</h2><span class="n">${L.length} 位到期</span>${k === "C" ? `<span class="grow"></span><button class="btn ghost sm" type="button" id="toggle-c">${S.showC ? "收起" : "展开"}</button>` : ""}</div>${hide ? "" : `<div class="cards">${L.map(card).join("")}</div>`}</section>`;
   };
-  let html = grp("A","核心客户") + grp("B","重要客户") + grp("C","培育中") + grp("D","你约过的 D 级");
-  if (!due.length) html = `<div class="empty"><p>今天没有到期的人。下面是 7 天内要联系的。</p></div>`;
-  if (soon.length) html += `<div class="group"><div class="group-h"><strong>7 天内到期</strong><span>${soon.length} 人</span></div><div class="soonlist">${
-    soon.map(c => `<div class="soonrow">${tierB(c.tier,1)}<button class="linkish" type="button" data-open="${esc(c.id)}">${esc(c.name)}</button><span class="sub">${esc(c.company||"")}</span><span class="num muted" style="font-size:12px">${short(dueDate(c))}</span></div>`).join("")}</div></div>`;
-  $("due-body").innerHTML = html;
-  const tg = $("toggle-c"); if (tg) tg.onclick = () => { S.showC = !S.showC; renderDue(); };
+  let html = grp("A","核心客户") + grp("B","重要客户") + grp("D","你约好的") + grp("C","培育中");
+  if (!due.length) html = `<div class="empty"><p class="hand">today's clear.</p><p>今天没有到期的人，下面是这周要联系的。</p></div>`;
+  if (soon.length) html += `<section class="view" style="gap:12px"><div class="sec-h"><h2>这周接下来</h2><span class="n">${soon.length} 位</span></div><div class="list">${
+    soon.map(c => `<button class="row" type="button" data-open="${esc(c.id)}">${tierB(c.tier)}<span class="nm">${esc(c.name)}</span><span class="co">${esc(c.company||"")}</span><span class="rel pill">${esc(c.relation||"")}</span><span class="st">${stageP(c)}</span><span class="lt r type muted">${short(lastTouch(c))}</span><span class="du r">${dueStamp(c)}</span></button>`).join("")}</div></section>`;
+  $("today-body").innerHTML = `<div class="view" style="gap:30px">${html}</div>`;
+  const tg = $("toggle-c"); if (tg) tg.onclick = () => { S.showC = !S.showC; renderToday(); };
 }
-let cadTimer;
-for (const t of ["A","B","C"]) $("cad-"+t).addEventListener("input", () => {
-  clearTimeout(cadTimer);
-  cadTimer = setTimeout(async () => {
-    const v = {}; for (const k of ["A","B","C"]) { const n = parseInt($("cad-"+k).value, 10); v[k] = n > 0 ? Math.min(n, 180) : DEFAULT_CAD[k]; }
-    if (v.A === S.cad.A && v.B === S.cad.B && v.C === S.cad.C) return;
-    S.cad = v; render();
-    try { await API.saveCadence(v); toast("联系节奏已保存"); } catch (e) { toast(errText(e)); }
-  }, 700);
-});
 
 /* ---------- 客户 ---------- */
 function buildFilters(){
-  $("c-tier").innerHTML = TIERS.map(t => `<button class="chip" type="button" aria-pressed="false" data-t="${t}" id="ct-${t}">${tierB(t,1)}${t} 级</button>`).join("");
-  $("c-stage").innerHTML = STAGES.map(s => `<button class="chip" type="button" aria-pressed="false" data-s="${s}" id="cs-${s}"><i class="dot" style="background:${STAGE_C[s]}"></i>${s}</button>`).join("");
-  SEGS.forEach(s => $("c-seg").add(new Option(s, s)));
-  RELS.forEach(s => $("c-rel").add(new Option(s, s)));
-  $("i-cat").innerHTML = CATS.map(c => `<button class="chip" type="button" aria-pressed="false" data-c="${c}" id="ic-${c}">${c}</button>`).join("");
-  $("c-tier").onclick = e => { const b = e.target.closest("[data-t]"); if (b) { toggle(S.cf.tiers, b.dataset.t, b); renderContacts(); } };
-  $("c-stage").onclick = e => { const b = e.target.closest("[data-s]"); if (b) { toggle(S.cf.stages, b.dataset.s, b); renderContacts(); } };
+  $("p-tier").innerHTML = TIERS.map(t => `<button class="chip" type="button" aria-pressed="false" data-t="${t}" id="pt-${t}">${tierB(t,1)}${t} 级</button>`).join("");
+  $("p-stage").innerHTML = STAGES.map(s => `<button class="chip" type="button" aria-pressed="false" data-s="${s}" id="ps-${s}"><i class="dot" style="background:${STAGE_C[s]}"></i>${s}</button>`).join("");
+  SEGS.forEach(s => $("p-seg").add(new Option(s, s)));
+  RELS.forEach(s => $("p-rel").add(new Option(s, s)));
+  $("i-cat").innerHTML = CATS.map(c => `<button class="chip" type="button" aria-pressed="false" data-c="${c}" id="ic-${c}"><i class="dot" style="background:${CAT_C[c]}"></i>${c}</button>`).join("");
+  $("p-tier").onclick = e => { const b = e.target.closest("[data-t]"); if (b) { toggle(S.pf.tiers, b.dataset.t, b); renderPeople(); } };
+  $("p-stage").onclick = e => { const b = e.target.closest("[data-s]"); if (b) { toggle(S.pf.stages, b.dataset.s, b); renderPeople(); } };
   $("i-cat").onclick = e => { const b = e.target.closest("[data-c]"); if (b) { toggle(S.inf.cats, b.dataset.c, b); renderIntel(); } };
-  $("c-seg").onchange = e => { S.cf.seg = e.target.value; renderContacts(); };
-  $("c-rel").onchange = e => { S.cf.rel = e.target.value; renderContacts(); };
-  $("c-q").oninput = e => { S.cf.q = e.target.value.trim().toLowerCase(); renderContacts(); };
+  $("p-seg").onchange = e => { S.pf.seg = e.target.value; renderPeople(); };
+  $("p-rel").onchange = e => { S.pf.rel = e.target.value; renderPeople(); };
+  $("p-q").oninput = e => { S.pf.q = e.target.value.trim().toLowerCase(); renderPeople(); };
   $("i-q").oninput = e => { S.inf.q = e.target.value.trim().toLowerCase(); renderIntel(); };
 }
 function toggle(set, k, btn){ set.has(k) ? set.delete(k) : set.add(k); btn.setAttribute("aria-pressed", String(set.has(k))); }
-
-function renderContacts(){
+function renderPeople(){
   if (!S.loaded) return;
-  const f = S.cf;
+  const f = S.pf;
   const L = [...S.contacts.values()].filter(c =>
-    (!f.tiers.size || f.tiers.has(c.tier)) && (!f.stages.size || f.stages.has(stage(c))) &&
-    (!f.seg || c.segment === f.seg) && (!f.rel || c.relation === f.rel) &&
+    (!f.tiers.size || f.tiers.has(c.tier)) && (!f.stages.size || f.stages.has(stage(c))) && (!f.seg || c.segment === f.seg) && (!f.rel || c.relation === f.rel) &&
     (!f.q || [c.name, c.wechatName, c.company, c.role, c.gives, c.wants, c.highlights, (c.topics||[]).join(" ")].join(" ").toLowerCase().includes(f.q))
   ).sort((a,b) => (TIERS.indexOf(a.tier) - TIERS.indexOf(b.tier)) || String(lastTouch(b)||"").localeCompare(String(lastTouch(a)||"")));
-  $("c-count").textContent = `${L.length} / ${S.contacts.size} 人`;
-  if (!S.contacts.size) { $("c-list").innerHTML = `<div class="empty"><p>还没有客户。点「＋ 新客户」加第一位，或者到「设置」里导入。</p></div>`; return; }
-  if (!L.length) { $("c-list").innerHTML = `<div class="empty"><p>没有符合条件的客户，换个筛选试试。</p></div>`; return; }
-  $("c-list").innerHTML = `<div class="lhead" aria-hidden="true"><span></span><span>客户</span><span>公司</span><span>关系</span><span>状态</span><span class="r">上次聊过</span><span class="r">下次联系</span></div>` +
-    L.map(c => `<button class="row" type="button" data-open="${esc(c.id)}">${tierB(c.tier)}<span class="nm">${esc(c.name)}</span><span class="meta"><span class="co">${esc(c.company || "—")}</span><span class="pill">${esc(c.relation||"")}</span>${stageP(c)}<span class="r num muted">${short(lastTouch(c))}</span><span class="r">${dueChip(c) || '<span class="muted" style="font-size:12px">不提醒</span>'}</span></span></button>`).join("");
+  $("p-count").textContent = `${L.length} / ${S.contacts.size} 位`;
+  if (!S.contacts.size) { $("p-list").innerHTML = `<div class="empty"><p class="hand">no cards yet.</p><p>点「新客户」加第一位，或者到「设置」里导入。</p></div>`; return; }
+  if (!L.length) { $("p-list").innerHTML = `<div class="empty"><p>没有符合条件的客户，换个筛选试试。</p></div>`; return; }
+  $("p-list").innerHTML = L.map(c => `<button class="row" type="button" data-open="${esc(c.id)}">${tierB(c.tier)}<span class="nm">${esc(c.name)}</span><span class="co">${esc(c.company || "—")}</span><span class="rel pill">${esc(c.relation||"")}</span><span class="st">${stageP(c)}</span><span class="lt r type muted">${short(lastTouch(c))}</span><span class="du r">${dueStamp(c) || '<span class="pill">不提醒</span>'}</span></button>`).join("");
 }
 
 /* ---------- 情报 ---------- */
@@ -565,10 +652,46 @@ function renderIntel(){
   const f = S.inf;
   const L = S.intel.filter(i => (!f.cats.size || f.cats.has(i.category)) && (!f.q || [i.content, i.contactName, i.category].join(" ").toLowerCase().includes(f.q)));
   $("i-count").textContent = `${L.length} 条`;
-  if (!S.intel.length) { $("i-list").innerHTML = `<div class="empty"><p>还没有情报。打完电话点「＋ 快速记录」，把拿到的价格或消息写进“拿到的情报”，就会出现在这里。</p></div>`; return; }
+  if (!S.intel.length) { $("i-list").innerHTML = `<div class="empty"><p class="hand">the ledger is empty.</p><p>打完电话点「记一笔」，把拿到的价格写进“拿到的情报”，就会记在这里。</p></div>`; return; }
   if (!L.length) { $("i-list").innerHTML = `<div class="empty"><p>没有符合条件的情报。</p></div>`; return; }
-  $("i-list").innerHTML = L.map(i => `<div class="irow"><span class="d">${esc(String(i.date||"").slice(0,10))}</span><span><span class="cat">${esc(i.category||"其他")}</span></span><span class="c">${esc(i.content)}</span><span class="s">${i.contactId && byId(i.contactId) ? `<button class="linkish" type="button" data-open="${esc(i.contactId)}">${esc(byId(i.contactId).name)}</button>` : `<span class="muted">${esc(i.contactName || "未注明来源")}</span>`}</span></div>`).join("");
+  const days = []; for (const i of L) { const d = day10(i.date); if (!days.length || days[days.length-1].d !== d) days.push({d, items:[]}); days[days.length-1].items.push(i); }
+  $("i-list").innerHTML = days.map(g => `<div class="lday"><div class="d type">${esc(g.d)}</div>${g.items.map(i => `<div class="lrow"><span class="pill"><i class="dot" style="background:${CAT_C[i.category] || "var(--muted)"}"></i>${esc(i.category||"其他")}</span><span class="c">${esc(i.content)}</span><span class="s">${i.contactId && byId(i.contactId) ? `<button type="button" data-open="${esc(i.contactId)}">${esc(byId(i.contactId).name)}</button>` : esc(i.contactName || "未注明来源")}</span></div>`).join("")}</div>`).join("");
 }
+
+/* ---------- 参谋 ---------- */
+try { const saved = JSON.parse(localStorage.getItem("crm.chat") || "[]"); if (Array.isArray(saved)) S.chat = saved.slice(-30); } catch(_) {}
+function saveChat(){ try { localStorage.setItem("crm.chat", JSON.stringify(S.chat.slice(-30))); } catch(_) {} }
+function renderChat(){
+  const box = $("chat");
+  const intro = `<div class="hero" style="margin-bottom:6px"><p class="date type">your desk assistant</p><h1 style="font-size:clamp(28px,5vw,40px)">问参谋</h1><p class="hint">它会看你全部的客户、最近的记录和情报再回答。推荐的人可以直接点开写开场白。</p></div>`;
+  const sugg = `<div class="suggest">${SUGGEST.map(q => `<button class="chip" type="button" data-q="${esc(q)}">${esc(q)}</button>`).join("")}</div>`;
+  const msgs = S.chat.map(m => m.role === "user" ? `<div class="msg me">${esc(m.content)}</div>` :
+    `<div class="msg ai">${m.error ? `<p class="err">${esc(m.error)}</p>` : `<div class="txt">${esc(m.content)}</div>`}${(m.contacts||[]).length ? `<div class="picks">${m.contacts.map(p => { const c = byId(p.id); if (!c) return ""; return `<div class="pick">${tierB(c.tier)}<div><button class="nm" type="button" data-open="${esc(c.id)}">${esc(c.name)}</button> ${modeP(p.mode)}<div class="why">${esc(p.why)}</div></div><div class="acts"><button class="btn sm" type="button" data-compose="${esc(c.id)}" data-mode="${esc(p.mode)}">${ico("pen")}写开场白</button></div></div>`; }).join("")}</div>` : ""}</div>`).join("");
+  const thinking = S.asking ? `<div class="msg ai"><span class="thinking">参谋在翻客户簿<i></i><i></i><i></i></span><div><button class="btn ghost sm" type="button" id="ask-stop">停止</button></div></div>` : "";
+  box.innerHTML = intro + (S.chat.length ? "" : sugg) + msgs + thinking + (S.chat.length && !S.asking ? `<div class="suggest"><button class="btn ghost sm" type="button" id="chat-clear">清空对话</button></div>` : "");
+  const stop = $("ask-stop"); if (stop) stop.onclick = () => S.asking && S.asking.abort();
+  const clr = $("chat-clear"); if (clr) clr.onclick = () => { S.chat = []; saveChat(); renderChat(); };
+  $("ask-go").disabled = !!S.asking;
+}
+async function ask(q){
+  q = String(q || "").trim(); if (!q || S.asking) return;
+  S.chat.push({role:"user", content:q}); saveChat();
+  const ctl = new AbortController(); S.asking = ctl; renderChat(); scrollChat();
+  try {
+    const turns = S.chat.filter(m => !m.error).map(m => ({role:m.role, content:m.content})).slice(-12);
+    const r = await API.agent(turns, ctl.signal);
+    S.chat.push({role:"assistant", content:r.reply, contacts:r.contacts || []});
+  } catch (e) {
+    if (e && e.name === "AbortError") S.chat.pop();
+    else S.chat.push({role:"assistant", content:"", error:errText(e)});
+  }
+  S.asking = null; saveChat(); renderChat(); scrollChat();
+}
+function scrollChat(){ requestAnimationFrame(() => { const last = $("chat").lastElementChild; last && last.scrollIntoView({block:"end", behavior:"smooth"}); }); }
+$("f-ask").onsubmit = e => { e.preventDefault(); const v = $("ask-q").value; $("ask-q").value = ""; autosize(); ask(v); };
+$("ask-q").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $("f-ask").requestSubmit(); } });
+function autosize(){ const t = $("ask-q"); t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 160) + "px"; }
+$("ask-q").addEventListener("input", autosize);
 
 /* ---------- sheet ---------- */
 let lastFocus;
@@ -591,136 +714,113 @@ document.addEventListener("keydown", e => { if (e.key === "Escape" && S.sheet) c
 function openDetail(id){ const c = byId(id); if (!c) return; openSheet(c.name, "", {type:"detail", id}); renderDetail(id); }
 function renderDetail(id){
   const c = byId(id); if (!c) { closeSheet(); return; }
-  const op = S.sheet.opener;
-  if (op && op.state === "busy") return;
-  $("sheet-title").textContent = c.name;
-  const sec = (l, v) => v && v !== "无" ? `<div class="sec"><span class="lbl">${l}</span><div class="val">${esc(v)}</div></div>` : "";
+  const kv = (l, v, wide) => v && v !== "无" ? `<div class="kv"${wide ? ' style="grid-column:1/-1"' : ""}><span class="lbl">${l}</span><div class="v">${esc(v)}</div></div>` : "";
   const tl = [...logsOf(id).map(l => ({d:l.date, k:(l.channel||"记录"), t:[l.summary, l.next ? "下次："+l.next : ""].filter(Boolean).join("　")})),
-              ...intelOf(id).map(i => ({d:i.date, k:"情报 · "+(i.category||""), t:i.content}))]
-    .sort((a,b) => String(b.d).localeCompare(String(a.d)));
-  const st = c.stats || {};
+              ...intelOf(id).map(i => ({d:i.date, k:"情报·"+(i.category||""), t:i.content}))].sort((a,b) => String(b.d).localeCompare(String(a.d)));
+  const st = c.stats || {}, m = suggestMode(c);
+  $("sheet-title").textContent = "客户卡";
   $("sheet-body").innerHTML = `
-    <div class="dhead">
-      <div class="t">${tierB(c.tier)}<h2>${esc(c.name)}</h2></div>
-      <div class="facts"><span>${esc(c.company || "公司未填")}</span>${c.role ? `<span>${esc(c.role)}</span>` : ""}<span>${esc(c.segment||"")}</span><span>${esc(c.relation||"")}</span></div>
-      <div class="facts">${stageP(c)}<span>上次聊过 <span class="num">${esc(lastTouch(c) || "—")}</span></span>${dueChip(c)}${c.phone ? `<span>电话 <span class="copyable">${esc(c.phone)}</span></span>` : ""}</div>
-    </div>
-    <div class="acts">
-      <button class="btn primary sm" type="button" data-opener="${esc(id)}">写开场白</button>
-      <button class="btn sm" type="button" data-log="${esc(id)}">记录</button>
-      <button class="btn sm" type="button" data-touch="${esc(id)}">✓ 今天聊过</button>
-      <button class="btn sm ghost" type="button" data-edit="${esc(id)}">编辑资料</button>
-    </div>
-    <div id="opener-box">${op ? openerHTML(op) : ""}</div>
-    <div class="box">
-      ${sec("下次跟进", c.nextNote ? c.nextNote + (c.nextDue ? `（${String(c.nextDue).slice(0,10)}）` : "") : "")}
-      ${sec("建议的下一步", c.next)}
-      <div class="pgrid">${sec("他能给我的", c.gives)}${sec("他想要的", c.wants)}</div>
-      ${sec("沟通提醒", c.issues)}
-      ${sec("互动特点", c.dynamics)}
-      ${sec("关键情报（导入时）", c.highlights)}
-    </div>
-    <div class="sec"><span class="lbl">往来记录和情报</span>
-      ${tl.length ? `<div class="tl">${tl.map(x => `<div class="tli"><span class="d">${esc(String(x.d||"").slice(0,10))}</span><span><span class="k">${esc(x.k)}</span>${esc(x.t)}</span></div>`).join("")}</div>` : `<p class="hint">还没有记录。聊完点「记录」，下次就能在这里看到。</p>`}
-    </div>
-    ${st.first ? `<p class="hint num">微信导出：我发 ${st.me||0} · 他发 ${st.them||0} · 群发 ${st.mass||0} · 通话 ${st.calls||0} · 首次 ${esc(st.first)}${c.wechatName && c.wechatName !== c.name ? " · 微信备注 " + esc(c.wechatName) : ""}</p>` : ""}`;
+    <article class="icard dcard">
+      <div class="head">${tierB(c.tier)}<div class="who"><h2 class="nm">${esc(c.name)}</h2></div>${dueStamp(c)}</div>
+      <div class="co">${esc(c.company || "公司未填")}${c.role ? " · " + esc(c.role) : ""}</div>
+      <div class="meta"><span>${esc(c.segment||"")}</span><span>${esc(c.relation||"")}</span>${stageP(c)}<span class="type">上次 ${esc(day10(lastTouch(c)) || "—")}</span>${c.phone ? `<span class="copyable">${esc(c.phone)}</span>` : ""}</div>
+      ${nextText(c) ? `<p class="note">${esc(nextText(c))}</p>` : ""}
+      <div class="acts"><button class="btn" type="button" data-compose="${esc(id)}" data-mode="${esc(m)}">${ico("pen")}写开场白</button><button class="btn line" type="button" data-log="${esc(id)}">记一笔</button><button class="btn line" type="button" data-touch="${esc(id)}">${ico("check")}聊过了</button><button class="btn ghost" type="button" data-edit="${esc(id)}">编辑</button></div>
+    </article>
+    <div class="panel"><div class="grid2">${kv("他能给我的", c.gives)}${kv("他想要的", c.wants)}${kv("沟通提醒", c.issues, 1)}${kv("互动特点", c.dynamics, 1)}${kv("关键情报（导入时）", c.highlights, 1)}</div></div>
+    ${(c.mySamples||[]).length ? `<div class="panel"><span class="lbl">你以前跟他这么聊</span><div class="hint" style="color:var(--ink);line-height:1.7">${c.mySamples.slice(-6).map(esc).join("<br>")}</div></div>` : ""}
+    <div class="panel"><span class="lbl">往来记录和情报</span>${tl.length ? `<div class="tl">${tl.map(x => `<div class="tli"><span class="d type">${esc(day10(x.d))}</span><span><span class="k">${esc(x.k)}</span>${esc(x.t)}</span></div>`).join("")}</div>` : `<p class="hint">还没有记录。聊完点「记一笔」，下次就能在这里看到。</p>`}</div>
+    ${st.first ? `<p class="hint type">wechat · 我发 ${st.me||0} · 他发 ${st.them||0} · 群发 ${st.mass||0} · 通话 ${st.calls||0} · since ${esc(st.first)}</p>` : ""}`;
 }
 
-/* ---------- opener (OpenAI via Supabase Edge Function) ---------- */
-function openerHTML(op){
-  if (op.state === "busy") return `<div class="box"><p class="hint">正在写开场白…</p><div><button class="btn sm" type="button" id="op-stop">停止</button></div></div>`;
-  if (op.state === "error") return `<div class="box"><p class="err">${esc(op.msg)}</p><div><button class="btn sm" type="button" data-opener="${esc(op.id)}">再试一次</button></div></div>`;
-  if (op.state === "done") {
-    const vs = op.text.split(/\n\s*-{3,}\s*\n/).map(s => s.trim()).filter(Boolean);
-    return `<div class="box"><p class="hint">开场白 · 复制后按需改一改再发</p>${vs.map((v,k) => `<div class="ver"><span>${esc(v)}</span><button class="btn sm" type="button" data-copy="${k}">复制</button></div>`).join("")}<div><button class="btn sm ghost" type="button" data-opener="${esc(op.id)}">换一批</button></div></div>`;
-  }
-  return "";
-}
-function buildPrompt(c){
-  const logs = logsOf(c.id).slice(0,4).map(l => `- ${String(l.date).slice(0,10)} ${l.channel||""}：${l.summary||""}${l.next ? "（下次："+l.next+"）" : ""}`).join("\n") || "（暂无记录）";
-  const theirs = intelOf(c.id).slice(0,5).map(i => `- ${String(i.date).slice(0,10)} [${i.category}] ${i.content}`).join("\n") || "（暂无）";
-  const market = S.intel.filter(i => i.contactId !== c.id).slice(0,8).map(i => `- ${String(i.date).slice(0,10)} [${i.category}] ${i.content}`).join("\n") || "（暂无）";
-  return `你在帮 Bruce（周宗信）写一条发给客户的微信。Bruce 是上海有色网（SMM）马来西亚办公室的镍、高镍生铁（NPI）、不锈钢分析师，二十多岁，马来西亚华人。他的目标是从客户那里拿到一手市场信息，并且和客户成为朋友。
-
-说话风格：短句、口语，自然地中英夹杂（cross check、FOB、CIF 这类词），常用“好滴”“嗯嗯”“确实”“哈哈哈”；按关系称呼X总、X哥、X姐；绝不用“尊敬的”“请问您”“冒昧打扰”这类客服腔；可以带一个表情如[抱拳][捂脸]。
-
-开口原则：
-1. 先亮牌再问：先给一条具体的信息（价格、成交、政策），再请对方确认或纠正。
-2. 问判断，不问底价；让对方只需回“对/不对”或一个数字。
-3. 接住上次聊的内容，让对方知道你记得。
-4. 按对方岗位问他答得上的问题：采购问接受价，销售问报价和走货，仓库问出入库，贸易商问成交和客户情绪，研究员问观点。
-5. 不要说出任何成交方、买卖方或信息来源的名字，不提公司内部资料。
-6. 关系熟的可以带一句关心或闲聊，不要每次都只问价。
-
-客户资料：
-- 名字：${c.name}；公司：${c.company||"未知"}；角色：${c.role||"未知"}；产业链：${c.segment||""}；关系：${c.relation||""}；分级：${c.tier}
-- 他能给的信息：${c.gives||"未知"}
-- 他想要的：${c.wants||"未知"}
-- 沟通提醒：${c.issues||"无"}
-- 上次聊过：${lastTouch(c)||"从未"}；建议的下一步：${c.nextNote || c.next || "无"}
-
-最近和他的记录：
-${logs}
-
-他之前给过的情报：
-${theirs}
-
-Bruce 手上最近的市场情报（可以拿来亮牌，只说内容，不提来源名字）：
-${market}
-
-今天是 ${today()}。写 2 个版本，每个不超过 3 行，可以直接复制发微信。两个版本之间用单独一行 --- 分隔。不要编号、引号或任何说明文字。`;
-}
-async function runOpener(id){
+/* ---------- composer (opener) ---------- */
+function openCompose(id, mode){
   const c = byId(id); if (!c) return;
-  if (!S.sheet || S.sheet.type !== "detail" || S.sheet.id !== id) openDetail(id);
-  S.sheet.ctl && S.sheet.ctl.abort();
-  const ctl = new AbortController(); S.sheet.ctl = ctl;
-  const op = {id, state:"busy"}; S.sheet.opener = op;
-  $("opener-box").innerHTML = openerHTML(op);
-  $("op-stop").onclick = () => ctl.abort();
-  try { Object.assign(op, {state:"done", text: await API.opener(buildPrompt(c), ctl.signal)}); }
-  catch (e) {
-    if (e && e.name === "AbortError") Object.assign(op, {state:"none"});
-    else Object.assign(op, {state:"error", msg: /fetch/i.test(String(e && e.message)) ? "连不上开场白服务。检查网络，或确认 Supabase 里已部署 opener 函数。" : String(e && e.message || "这次没写出来，稍后再试。")});
-  }
-  if (S.sheet && S.sheet.opener === op) { const box = $("opener-box"); if (box) box.innerHTML = openerHTML(op); }
+  const state = {type:"compose", id, mode: mode || suggestMode(c), note:"", options:null, busy:false, error:"", editing:-1};
+  openSheet("写给 " + c.name, "", state); renderCompose();
+}
+function renderCompose(){
+  const st = S.sheet; if (!st || st.type !== "compose") return;
+  const c = byId(st.id);
+  $("sheet-body").innerHTML = `
+    <div class="panel">
+      <div class="facts">${tierB(c.tier)}<b style="font:400 18px var(--f-display)">${esc(c.name)}</b><span class="muted">${esc(c.company||"")}</span>${stageP(c)}</div>
+      ${nextText(c) ? `<p class="hint">建议：${esc(nextText(c))}</p>` : ""}
+      <span class="lbl">这次想</span>
+      <div class="modes">${MODES.map(m => `<button type="button" style="--mc:${m.c}" aria-pressed="${m.k === st.mode}" data-mode-pick="${m.k}"><b>${m.k}</b><span>${m.d}</span></button>`).join("")}</div>
+      <div class="field"><label for="cp-note">还想提一句什么（可不填）</label><input type="text" id="cp-note" value="${esc(st.note)}" placeholder="比如：问他 12 月货源，顺便提一下我下周去上海"></div>
+      <div class="acts"><button class="btn" type="button" id="cp-go"${st.busy ? " disabled" : ""}>${ico("pen")}${st.options ? "换一批" : "写 4 个选项"}</button>${st.busy ? `<button class="btn ghost" type="button" id="cp-stop">停止</button>` : ""}</div>
+    </div>
+    ${st.busy ? `<div class="panel"><span class="thinking">正在照着你的说话方式写<i></i><i></i><i></i></span></div>` : ""}
+    ${st.error ? `<div class="panel"><p class="err">${esc(st.error)}</p></div>` : ""}
+    ${st.options ? st.options.map((o, k) => `<article class="opt">
+        <span class="lab">${esc(o.label || "选项 " + (k+1))}</span>
+        ${st.editing === k ? `<textarea id="cp-edit" aria-label="改成你要发的">${esc(o.text)}</textarea>` : `<p class="txt">${esc(o.text)}</p>`}
+        <div class="acts">
+          <button class="btn line sm" type="button" data-copy-opt="${k}">复制</button>
+          ${st.editing === k ? "" : `<button class="btn line sm" type="button" data-edit-opt="${k}">改一改</button>`}
+          <button class="btn sm" type="button" data-sent-opt="${k}">${ico("check")}发了，记一笔</button>
+        </div></article>`).join("") : ""}
+    ${st.options ? `<p class="hint">点「发了，记一笔」会记下这次联系，并把你最终发出的这句话存进你的说话样本，下次写得更像你。</p>` : ""}`;
+  $("cp-note").oninput = e => { st.note = e.target.value; };
+  $("cp-go").onclick = () => runCompose();
+  const stop = $("cp-stop"); if (stop) stop.onclick = () => st.ctl && st.ctl.abort();
+}
+async function runCompose(){
+  const st = S.sheet; if (!st || st.type !== "compose" || st.busy) return;
+  const ctl = new AbortController(); st.ctl = ctl; st.busy = true; st.error = ""; st.editing = -1; renderCompose();
+  try { const r = await API.opener(st.id, st.mode, st.note, ctl.signal); st.options = r.options; }
+  catch (e) { if (!(e && e.name === "AbortError")) st.error = errText(e); }
+  st.busy = false; if (S.sheet === st) renderCompose();
+}
+async function copyText(txt){
+  try { await navigator.clipboard.writeText(txt); toast("已复制"); return true; }
+  catch (_) { toast("复制不了，长按文字手动复制"); return false; }
+}
+async function sentOption(k){
+  const st = S.sheet, c = byId(st.id), o = st.options[k];
+  const ed = $("cp-edit"), text = (st.editing === k && ed ? ed.value : o.text).trim();
+  if (!text) return;
+  try {
+    await saveLog({contactId:c.id, channel:"微信", date:today(), summary:`[${st.mode}] ${text}`});
+    await API.addStyle({category:st.mode, text, contactId:c.id, source:"我发的"});
+    S.learned++; toast("记下了，也学会了这句"); closeSheet(); refresh();
+  } catch (e) { toast(errText(e)); }
 }
 
 /* ---------- forms ---------- */
 function contactOptions(){ return [...S.contacts.values()].sort((a,b) => (TIERS.indexOf(a.tier) - TIERS.indexOf(b.tier)) || a.name.localeCompare(b.name, "zh")).map(c => `<option value="${esc(c.id)}">${esc(c.tier)} · ${esc(c.name)}${c.company ? "｜" + esc(c.company) : ""}</option>`).join(""); }
 function sel(name, opts, val, id){ return `<select id="${id}" name="${name}">${opts.map(o => `<option${o===val?" selected":""}>${esc(o)}</option>`).join("")}</select>`; }
-
 function openLog(id, back){
   const c = id ? byId(id) : null;
-  openSheet(c ? "记录 · " + c.name : "快速记录", `
-    <form id="f-log" novalidate>
+  openSheet(c ? "记一笔 · " + c.name : "记一笔", `
+    <form id="f-log" class="panel" novalidate>
       <div class="field"><label for="lg-c">客户</label><select id="lg-c" name="contact" ${c ? "" : "autofocus"}><option value="">选择客户…</option>${contactOptions()}</select></div>
       <div class="frow">
-        <div class="field"><span class="lbl">方式</span><div class="radio">${CHANNELS.map((ch,k) => `<input type="radio" name="channel" id="lg-ch-${k}" value="${ch}"${k===0?" checked":""}><label for="lg-ch-${k}">${ch}</label>`).join("")}</div></div>
+        <div class="field"><span class="lb">方式</span><div class="radio">${CHANNELS.map((ch,k) => `<input type="radio" name="channel" id="lg-ch-${k}" value="${ch}"${k===0?" checked":""}><label for="lg-ch-${k}">${ch}</label>`).join("")}</div></div>
         <div class="field"><label for="lg-d">日期</label><input type="date" id="lg-d" name="date" value="${today()}" max="${today()}"></div>
       </div>
-      <div class="field"><label for="lg-s">聊了什么</label><textarea id="lg-s" name="summary" placeholder="比如：问了他们 11 月排产，说减了两成，钢厂接受价在 1000 左右" ${c ? "autofocus" : ""}></textarea></div>
+      <div class="field"><label for="lg-s">聊了什么</label><textarea id="lg-s" name="summary" placeholder="比如：问了 11 月排产，说减了两成，钢厂接受价在 1000 左右" ${c ? "autofocus" : ""}></textarea></div>
       <div class="field"><label for="lg-i">拿到的情报（会记进情报库，可不填）</label><textarea id="lg-i" name="intel" placeholder="比如：某贸易商 1035 舱底成交 3000 吨，含镍 11%"></textarea></div>
       <div class="field"><label for="lg-cat">情报品类</label>${sel("category", CATS, "NPI/镍铁", "lg-cat")}</div>
       <div class="frow">
-        <div class="field"><label for="lg-n">下次跟进什么（可不填）</label><input type="text" id="lg-n" name="next" placeholder="比如：月底问 12 月货源和升水"></div>
-        <div class="field"><label for="lg-nd">哪天跟进（不填就按节奏）</label><input type="date" id="lg-nd" name="nextDate" min="${today()}"></div>
+        <div class="field"><label for="lg-n">下次跟进什么</label><input type="text" id="lg-n" name="next" placeholder="比如：月底问 12 月货源和升水"></div>
+        <div class="field"><label for="lg-nd">哪天跟进（不填按节奏）</label><input type="date" id="lg-nd" name="nextDate" min="${today()}"></div>
       </div>
       <p class="err" id="lg-err" hidden></p>
-      <div class="formfoot"><button class="btn" type="button" id="lg-cancel">取消</button><button class="btn primary" type="submit" id="lg-save">保存记录</button></div>
+      <div class="formfoot"><button class="btn line" type="button" id="lg-cancel">取消</button><button class="btn" type="submit" id="lg-save">保存</button></div>
     </form>`, {type:"form"});
   if (c) $("lg-c").value = c.id;
   $("lg-cancel").onclick = () => back ? openDetail(back) : closeSheet();
   $("f-log").onsubmit = async e => {
     e.preventDefault();
-    const fd = new FormData(e.target), cid = String(fd.get("contact")||""), summary = String(fd.get("summary")||"").trim(), intel = String(fd.get("intel")||"").trim();
-    const err = $("lg-err");
+    const fd = new FormData(e.target), cid = String(fd.get("contact")||""), summary = String(fd.get("summary")||"").trim(), intel = String(fd.get("intel")||"").trim(), err = $("lg-err");
     if (!cid) { err.textContent = "先选一位客户。"; err.hidden = false; return; }
     if (!summary && !intel) { err.textContent = "写一句聊了什么，或者拿到的情报。"; err.hidden = false; return; }
     $("lg-save").disabled = true;
     try {
       await saveLog({contactId:cid, channel:String(fd.get("channel")), date:String(fd.get("date")||today()), summary, intel, category:String(fd.get("category")), next:String(fd.get("next")||"").trim(), nextDate:String(fd.get("nextDate")||"")});
-      toast("已保存"); await refresh(); openDetail(cid);
+      toast("记下了"); await refresh(); openDetail(cid);
     } catch (x) { err.textContent = errText(x); err.hidden = false; $("lg-save").disabled = false; }
   };
 }
@@ -729,28 +829,24 @@ async function saveLog(r){
   await API.addLog({contactId:r.contactId, contactName:c.name, channel:r.channel, date:r.date, summary:r.summary, next:r.next||"", nextDate:r.nextDate||null});
   if (r.intel) await API.addIntel({contactId:r.contactId, contactName:c.name, date:r.date, category:r.category||"其他", content:r.intel, source:"记录"});
   const patch = {updatedAt: new Date().toISOString()};
-  if (!lastTouch(c) || r.date > String(lastTouch(c)).slice(0,10)) patch.lastTouch = r.date;
+  if (!lastTouch(c) || r.date > day10(lastTouch(c))) patch.lastTouch = r.date;
   if (r.next || r.nextDate) { patch.nextNote = r.next || c.nextNote || ""; patch.nextDue = r.nextDate || null; }
-  else if (c.nextDue && r.date >= String(c.nextDue).slice(0,10)) { patch.nextDue = null; patch.nextNote = ""; }
+  else if (c.nextDue && r.date >= day10(c.nextDue)) { patch.nextDue = null; patch.nextNote = ""; }
   await API.updateContact(r.contactId, patch);
 }
 async function touchToday(id){
   const c = byId(id); if (!c) return;
-  try { await saveLog({contactId:id, channel:"微信", date:today(), summary:"聊过（快速打卡）"}); toast(`已记下：今天和${c.name}聊过`); await refresh(); }
+  try { await saveLog({contactId:id, channel:"微信", date:today(), summary:"聊过（快速打卡）"}); toast(`记下了：今天和${c.name}聊过`); await refresh(); }
   catch (e) { toast(errText(e)); }
 }
-
 function openIntel(){
   openSheet("记一条情报", `
-    <form id="f-intel" novalidate>
+    <form id="f-intel" class="panel" novalidate>
       <div class="field"><label for="in-t">内容</label><textarea id="in-t" name="content" autofocus placeholder="比如：华南 304 冷轧现货 12450 毛基，走货一般"></textarea></div>
-      <div class="frow">
-        <div class="field"><label for="in-cat">品类</label>${sel("category", CATS, "NPI/镍铁", "in-cat")}</div>
-        <div class="field"><label for="in-d">日期</label><input type="date" id="in-d" name="date" value="${today()}" max="${today()}"></div>
-      </div>
+      <div class="frow"><div class="field"><label for="in-cat">品类</label>${sel("category", CATS, "NPI/镍铁", "in-cat")}</div><div class="field"><label for="in-d">日期</label><input type="date" id="in-d" name="date" value="${today()}" max="${today()}"></div></div>
       <div class="field"><label for="in-c">来源客户（可不填）</label><select id="in-c" name="contact"><option value="">不注明</option>${contactOptions()}</select></div>
       <p class="err" id="in-err" hidden></p>
-      <div class="formfoot"><button class="btn" type="button" id="in-cancel">取消</button><button class="btn primary" type="submit" id="in-save">保存情报</button></div>
+      <div class="formfoot"><button class="btn line" type="button" id="in-cancel">取消</button><button class="btn" type="submit" id="in-save">保存</button></div>
     </form>`, {type:"form"});
   $("in-cancel").onclick = closeSheet;
   $("f-intel").onsubmit = async e => {
@@ -758,37 +854,25 @@ function openIntel(){
     const fd = new FormData(e.target), content = String(fd.get("content")||"").trim(), cid = String(fd.get("contact")||"");
     if (!content) { $("in-err").textContent = "写一下情报内容。"; $("in-err").hidden = false; return; }
     $("in-save").disabled = true;
-    try {
-      await API.addIntel({contactId:cid||null, contactName: cid ? byId(cid).name : "", date:String(fd.get("date")||today()), category:String(fd.get("category")), content, source:"手动"});
-      toast("情报已保存"); closeSheet(); await refresh();
-    } catch (x) { $("in-err").textContent = errText(x); $("in-err").hidden = false; $("in-save").disabled = false; }
+    try { await API.addIntel({contactId:cid||null, contactName: cid ? byId(cid).name : "", date:String(fd.get("date")||today()), category:String(fd.get("category")), content, source:"手动"}); toast("情报记下了"); closeSheet(); await refresh(); }
+    catch (x) { $("in-err").textContent = errText(x); $("in-err").hidden = false; $("in-save").disabled = false; }
   };
 }
-
 function openEdit(id){
   const c = id ? byId(id) : {tier:"C", relation:"未激活", segment:"其他/未知"};
   const v = k => esc(c[k] || "");
   openSheet(id ? "编辑 · " + c.name : "新客户", `
-    <form id="f-c" novalidate>
-      <div class="frow">
-        <div class="field"><label for="ec-n">名字</label><input type="text" id="ec-n" name="name" value="${v("name")}" autofocus></div>
-        <div class="field"><label for="ec-co">公司</label><input type="text" id="ec-co" name="company" value="${v("company")}"></div>
-      </div>
-      <div class="frow">
-        <div class="field"><label for="ec-r">角色</label><input type="text" id="ec-r" name="role" value="${v("role")}" placeholder="采购 / 销售 / 研究员…"></div>
-        <div class="field"><label for="ec-p">电话</label><input type="tel" id="ec-p" name="phone" value="${v("phone")}"></div>
-      </div>
-      <div class="frow">
-        <div class="field"><label for="ec-t">分级</label>${sel("tier", TIERS, c.tier, "ec-t")}</div>
-        <div class="field"><label for="ec-rel">关系类型</label>${sel("relation", RELS, c.relation, "ec-rel")}</div>
-      </div>
+    <form id="f-c" class="panel" novalidate>
+      <div class="frow"><div class="field"><label for="ec-n">名字</label><input type="text" id="ec-n" name="name" value="${v("name")}" autofocus></div><div class="field"><label for="ec-co">公司</label><input type="text" id="ec-co" name="company" value="${v("company")}"></div></div>
+      <div class="frow"><div class="field"><label for="ec-r">角色</label><input type="text" id="ec-r" name="role" value="${v("role")}" placeholder="采购 / 销售 / 研究员…"></div><div class="field"><label for="ec-p">电话</label><input type="tel" id="ec-p" name="phone" value="${v("phone")}"></div></div>
+      <div class="frow"><div class="field"><label for="ec-t">分级</label>${sel("tier", TIERS, c.tier, "ec-t")}</div><div class="field"><label for="ec-rel">关系类型</label>${sel("relation", RELS, c.relation, "ec-rel")}</div></div>
       <div class="field"><label for="ec-seg">产业链位置</label>${sel("segment", SEGS, c.segment, "ec-seg")}</div>
       <div class="field"><label for="ec-g">他能给我的</label><textarea id="ec-g" name="gives">${v("gives")}</textarea></div>
       <div class="field"><label for="ec-w">他想要的</label><textarea id="ec-w" name="wants">${v("wants")}</textarea></div>
       <div class="field"><label for="ec-i">沟通提醒</label><textarea id="ec-i" name="issues">${v("issues")}</textarea></div>
       <div class="field"><label for="ec-x">建议的下一步</label><textarea id="ec-x" name="next">${v("next")}</textarea></div>
       <p class="err" id="ec-err" hidden></p>
-      <div class="formfoot"><button class="btn" type="button" id="ec-cancel">取消</button><button class="btn primary" type="submit" id="ec-save">${id ? "保存修改" : "添加客户"}</button></div>
+      <div class="formfoot"><button class="btn line" type="button" id="ec-cancel">取消</button><button class="btn" type="submit" id="ec-save">${id ? "保存" : "添加客户"}</button></div>
     </form>`, {type:"form"});
   $("ec-cancel").onclick = () => id ? openDetail(id) : closeSheet();
   $("f-c").onsubmit = async e => {
@@ -801,30 +885,39 @@ function openEdit(id){
       let cid = id;
       if (id) await API.updateContact(id, data);
       else { cid = "m-" + Date.now().toString(36) + Math.random().toString(36).slice(2,6); await API.insertContact({...data, id:cid, source:"手动添加"}); }
-      toast(id ? "已保存" : "已添加"); await refresh(); openDetail(cid);
+      toast(id ? "保存了" : "添加了"); await refresh(); openDetail(cid);
     } catch (x) { $("ec-err").textContent = errText(x); $("ec-err").hidden = false; $("ec-save").disabled = false; }
   };
 }
 
-/* ---------- settings: import / export / sign out ---------- */
+/* ---------- settings ---------- */
 function openSettings(){
   openSheet("设置", `
-    <div class="box">
-      <div class="sec"><span class="lbl">账号</span><div class="val">${esc(S.user && S.user.email || "")}</div></div>
-      <div class="acts"><button class="btn sm" type="button" id="st-out">退出登录</button></div>
-    </div>
-    <div class="box">
-      <div class="sec"><span class="lbl">导入数据</span><p class="hint">选 Claude 生成的 crm-seed.json，或之前导出的备份。同一位客户会更新，不会重复。文件只在你电脑和你的 Supabase 之间传，不经过 GitHub。</p></div>
+    <div class="panel"><span class="lbl">联系节奏</span>
+      <div class="cad"><label for="cad-A">A 级每</label><input id="cad-A" type="number" min="1" max="90" inputmode="numeric" value="${S.cad.A}"><span>天</span>
+      <label for="cad-B">B 级每</label><input id="cad-B" type="number" min="1" max="90" inputmode="numeric" value="${S.cad.B}"><span>天</span>
+      <label for="cad-C">C 级每</label><input id="cad-C" type="number" min="1" max="180" inputmode="numeric" value="${S.cad.C}"><span>天</span></div>
+      <p class="hint">D 级不提醒。到期按“上次聊过”加上这个天数算。</p>
+      <div class="acts"><button class="btn sm" type="button" id="st-cad">保存节奏</button></div></div>
+    <div class="panel"><span class="lbl">我的说话习惯</span>
+      <p class="hint">写开场白时会照这个来写。可以直接改，比如加一句“对女性客户不叫宝”。另外已经学了 ${S.learned} 句你自己改过再发出去的话。</p>
+      <div class="field"><textarea id="st-prof" style="min-height:220px" aria-label="说话习惯">${esc(S.profile)}</textarea></div>
+      <div class="acts"><button class="btn sm" type="button" id="st-prof-save">保存</button></div></div>
+    <div class="panel"><span class="lbl">导入 / 备份</span>
+      <p class="hint">导入 Claude 生成的 crm-seed.json，或之前导出的备份。同一位客户会更新，不会重复；你写的记录、情报和学到的句子都不会丢。文件只在你的电脑和你的 Supabase 之间传。</p>
       <div class="field"><label for="st-file">选择 JSON 文件</label><input type="file" id="st-file" accept="application/json,.json"></div>
       <p class="hint" id="st-prog" hidden></p>
-    </div>
-    <div class="box">
-      <div class="sec"><span class="lbl">备份</span><p class="hint">把客户、记录和情报导出成一个 JSON 文件存在电脑上。</p></div>
-      <div class="acts"><button class="btn sm" type="button" id="st-exp">导出备份</button></div>
-    </div>`, {type:"settings"});
+      <div class="acts"><button class="btn line sm" type="button" id="st-exp">导出备份</button></div></div>
+    <div class="panel"><span class="lbl">账号</span><div>${esc(S.user && S.user.email || "")}</div><div class="acts"><button class="btn line sm" type="button" id="st-out">退出登录</button></div></div>`, {type:"settings"});
+  $("st-cad").onclick = async () => {
+    const v = {}; for (const k of ["A","B","C"]) { const n = parseInt($("cad-"+k).value, 10); v[k] = n > 0 ? Math.min(n, 180) : DEFAULT_CAD[k]; }
+    try { await API.saveSettings({cadence: v}); S.cad = v; render(); toast("节奏保存了"); } catch (e) { toast(errText(e)); }
+  };
+  $("st-prof-save").onclick = async () => { const p = $("st-prof").value.trim(); try { await API.saveSettings({styleProfile: p}); S.profile = p; toast("说话习惯保存了"); } catch (e) { toast(errText(e)); } };
   $("st-out").onclick = async () => { await API.signOut(); closeSheet(); };
-  $("st-exp").onclick = () => {
-    const blob = new Blob([JSON.stringify({version:1, exportedAt:new Date().toISOString(), contacts:[...S.contacts.values()], logs:S.logs, intel:S.intel}, null, 1)], {type:"application/json"});
+  $("st-exp").onclick = async () => {
+    let styles = []; try { styles = await API.exportStyles(); } catch (_) {}
+    const blob = new Blob([JSON.stringify({version:2, exportedAt:new Date().toISOString(), styleProfile:S.profile, contacts:[...S.contacts.values()], logs:S.logs, intel:S.intel, styleExamples:styles}, null, 1)], {type:"application/json"});
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `nickel-crm-backup-${today()}.json`; document.body.append(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   };
@@ -835,29 +928,30 @@ function openSettings(){
     if (!Array.isArray(data.contacts)) { prog.textContent = "文件里没有客户列表，确认选的是 crm-seed.json 或备份文件。"; return; }
     try {
       const r = await API.importData(data, (d, t) => { prog.textContent = `正在导入 ${d} / ${t}…`; });
-      prog.textContent = `导入完成：客户 ${r.contacts} 位，情报 ${r.intel} 条${r.logs ? `，记录 ${r.logs} 条` : ""}。`;
-      await refresh();
-    } catch (x) { prog.textContent = errText(x).replace("没保存上：","导入失败："); }
+      prog.textContent = `导入完成：客户 ${r.contacts} 位，情报 ${r.intel} 条，说话样本 ${r.styles} 句${r.logs ? `，记录 ${r.logs} 条` : ""}。`;
+      await refresh(); $("st-prof").value = S.profile;
+    } catch (x) { prog.textContent = "导入失败：" + errText(x); }
   };
 }
 
 /* ---------- delegated clicks ---------- */
 document.addEventListener("click", async e => {
-  const t = e.target.closest("[data-open],[data-log],[data-touch],[data-opener],[data-edit],[data-copy],[data-settings]"); if (!t) return;
-  if (t.dataset.open) return openDetail(t.dataset.open);
-  if (t.dataset.log) return openLog(t.dataset.log, S.sheet && S.sheet.type === "detail" ? t.dataset.log : null);
-  if (t.dataset.touch) { t.disabled = true; await touchToday(t.dataset.touch); t.disabled = false; return; }
-  if (t.dataset.opener) return runOpener(t.dataset.opener);
-  if (t.dataset.edit) return openEdit(t.dataset.edit);
-  if (t.dataset.settings) return openSettings();
-  if (t.dataset.copy !== undefined) {
-    const span = t.parentElement.querySelector("span"), txt = span.textContent;
-    try { await navigator.clipboard.writeText(txt); toast("已复制"); }
-    catch (_) { const r = document.createRange(); r.selectNodeContents(span); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("已选中，按复制键复制"); }
-  }
+  const t = e.target.closest("[data-open],[data-log],[data-touch],[data-compose],[data-edit],[data-settings],[data-q],[data-mode-pick],[data-copy-opt],[data-edit-opt],[data-sent-opt]"); if (!t) return;
+  const d = t.dataset;
+  if (d.open) return openDetail(d.open);
+  if (d.log) return openLog(d.log, S.sheet && S.sheet.type === "detail" ? d.log : null);
+  if (d.touch) { t.disabled = true; await touchToday(d.touch); t.disabled = false; return; }
+  if (d.compose) return openCompose(d.compose, d.mode);
+  if (d.edit) return openEdit(d.edit);
+  if (d.settings) return openSettings();
+  if (d.q) return ask(d.q);
+  if (d.modePick && S.sheet && S.sheet.type === "compose" && !S.sheet.busy) { S.sheet.mode = d.modePick; S.sheet.options = null; renderCompose(); return; }
+  if (d.copyOpt !== undefined) { const st = S.sheet, k = +d.copyOpt, ed = $("cp-edit"); return copyText(st.editing === k && ed ? ed.value : st.options[k].text); }
+  if (d.editOpt !== undefined) { S.sheet.editing = +d.editOpt; renderCompose(); const ed = $("cp-edit"); ed && ed.focus(); return; }
+  if (d.sentOpt !== undefined) { t.disabled = true; await sentOption(+d.sentOpt); t.disabled = false; }
 });
-$("btn-rec-top").onclick = () => openLog(null);
-$("btn-rec-fab").onclick = () => openLog(null);
+$("btn-rec").onclick = () => openLog(null);
+$("btn-rec-m").onclick = () => openLog(null);
 $("btn-new-intel").onclick = openIntel;
 $("btn-new-contact").onclick = () => openEdit(null);
 $("btn-settings").onclick = openSettings;
@@ -869,7 +963,7 @@ $("au-switch").onclick = () => {
   $("au-go").textContent = signUpMode ? "注册" : "登录";
   $("au-switch").textContent = signUpMode ? "已有账号？去登录" : "第一次用？注册账号";
   $("au-p").autocomplete = signUpMode ? "new-password" : "current-password";
-  $("auth-hint").textContent = signUpMode ? "注册你自己的账号。注册完记得在 Supabase 里关掉新用户注册。" : "登录后才能看到你的客户。";
+  $("auth-hint").textContent = signUpMode ? "注册你自己的账号。" : "登录后才能看到你的客户。";
   $("au-err").hidden = true;
 };
 $("f-auth").onsubmit = async e => {
@@ -887,9 +981,7 @@ $("f-auth").onsubmit = async e => {
   }
   $("au-go").disabled = false;
 };
-function showGate(which){
-  $("gate-setup").hidden = which !== "setup"; $("gate-auth").hidden = which !== "auth"; $("app").hidden = which !== "app";
-}
+function showGate(which){ $("gate-setup").hidden = which !== "setup"; $("gate-auth").hidden = which !== "auth"; $("app").hidden = which !== "app"; }
 async function onSession(s){
   S.user = s ? s.user : null;
   if (!s) { S.loaded = false; S.contacts = new Map(); S.logs = []; S.intel = []; closeSheet(); showGate("auth"); return; }
@@ -898,15 +990,11 @@ async function onSession(s){
 
 /* ---------- boot ---------- */
 buildFilters();
-try { const v = localStorage.getItem("crm.view"); if (v && ["due","contacts","intel"].includes(v)) S.view = v; } catch(_) {}
+try { const v = localStorage.getItem("crm.view"); if (v && ["today","people","intel","ask"].includes(v)) S.view = v; } catch(_) {}
 setView(S.view);
 if (!API) { showGate("setup"); return; }
 let seen = false;
-const handle = s => {
-  const id = (s && s.user && s.user.id) || null;
-  if (seen && id === ((S.user && S.user.id) || null)) return;  // token refreshes and repeat events
-  seen = true; onSession(s);
-};
+const handle = s => { const id = (s && s.user && s.user.id) || null; if (seen && id === ((S.user && S.user.id) || null)) return; seen = true; onSession(s); };
 API.onAuth(handle);
 API.session().then(handle);
 })();
