@@ -50,5 +50,20 @@ Bruce 的个人客户管理工具：跟进提醒、快速记录、情报日志�
 
 写开场白和问参谋时，客户资料、记录和情报会发给 OpenAI。
 
+## 微信同步（手动刷新）
+
+前提：本机已经用 yichen-wechat-local-vault 抓好微信密钥（`~/.config/wechat-keys.json`），Mac 上的微信保持登录。
+
+```bash
+python3 sync/wechat_sync.py login      # 第一次：输入客户簿邮箱和密码，只保存登录令牌
+python3 sync/wechat_sync.py            # 刷新
+python3 sync/wechat_sync.py --dry-run  # 只看会更新什么
+python3 sync/wechat_sync.py --no-ai    # 不用 AI 提取情报
+```
+
+每次刷新：增量解密微信 → 只读客户簿里已有客户的新消息（私人聊天、群聊都跳过）→ 更新“上次聊过”、记一笔“微信同步”、把你新发的话加进说话样本 → 用 `extract` 函数从客户发来的消息里提取价格和成交（标“微信自动”）→ 备注以 SMM 开头的新联系人自动建成 C 级客户。同步进度和登录令牌存在 `~/.config/nickel-crm/`，不进仓库。
+
+需要在 Supabase 里多部署一个 `extract` 函数（`supabase/functions/extract/index.ts`）。
+
 ## 更新客户数据
 重新导出微信聊天后，让 Claude 重新分析并生成新的 `crm-seed.json`，再到「设置 → 导入数据」导入。同一位客户会更新资料，你写的记录和情报不会丢。

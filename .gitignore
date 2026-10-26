@@ -5,4 +5,5 @@
 !/index.html
 !/config.js
 !/supabase/
+!/sync/
 .DS_Store
