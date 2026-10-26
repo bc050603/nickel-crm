@@ -14,9 +14,20 @@ const cors = {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
 
+// 只认登录用户的令牌：拿去问 Supabase Auth 这是谁，问不到就拒绝。
+async function signedInUser(req: Request) {
+  const auth = req.headers.get("Authorization") ?? "";
+  const apikey = req.headers.get("apikey") ?? Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+  const url = Deno.env.get("SUPABASE_URL");
+  if (!url || !auth.startsWith("Bearer ")) return null;
+  const r = await fetch(`${url}/auth/v1/user`, { headers: { Authorization: auth, apikey } });
+  return r.ok ? await r.json() : null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ error: "只接受 POST" }, 405);
+  if (!(await signedInUser(req))) return json({ error: "请先登录" }, 401);
 
   const key = Deno.env.get("OPENAI_API_KEY");
   const model = Deno.env.get("OPENAI_MODEL");

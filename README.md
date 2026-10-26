@@ -25,8 +25,8 @@ Bruce 的个人客户管理工具：跟进提醒、快速记录、情报日志�
    - `OPENAI_MODEL`：你想用的模型名，以 OpenAI 后台列出的为准
 
 ### 4. 设置登录
-1. **Authentication → URL Configuration** 里，把 Site URL 设成 GitHub Pages 的地址（比如 `https://<你的用户名>.github.io/nickel-crm/`）。
-2. 先别关注册，第 6 步注册完再关。
+1. **Authentication → URL Configuration → Redirect URLs** 里加上 `https://<你的用户名>.github.io/nickel-crm/**`。如果这个 Supabase 项目只给 CRM 用，也可以直接把 Site URL 改成这个网址；如果还有别的应用在用，就别动 Site URL。
+2. 先别关注册，第 6 步注册完再关。如果同一个项目里还有别的应用要注册新用户，就保留注册：每张表都有行级权限，别人注册了也看不到你的数据。
 
 ### 5. 填配置
 把 Project URL 和 anon key 填进 `config.js`，提交并推送。这两个值本来就是给网页用的，可以公开。
