@@ -55,18 +55,23 @@ Bruce 的个人客户管理工具：跟进提醒、快速记录、情报日志�
 
 写开场白、问参谋和通话转录时，客户资料、记录、情报和通话录音会发给 OpenAI。
 
-## 微信同步（手动刷新）
+## 刷新：微信和 WhatsApp 同步（手动）
 
-前提：本机已经用 yichen-wechat-local-vault 抓好微信密钥（`~/.config/wechat-keys.json`），Mac 上的微信保持登录。
+前提：本机已经用 yichen-wechat-local-vault 抓好微信密钥（`~/.config/wechat-keys.json`），Mac 上的微信保持登录；WhatsApp Desktop 装着并登录。
 
 ```bash
 python3 sync/wechat_sync.py login      # 第一次：输入客户簿邮箱和密码，只保存登录令牌
-python3 sync/wechat_sync.py            # 刷新
+python3 sync/wechat_sync.py            # 刷新（微信和 WhatsApp 一起）
 python3 sync/wechat_sync.py --dry-run  # 只看会更新什么
 python3 sync/wechat_sync.py --no-ai    # 不用 AI 提取情报
+python3 sync/wechat_sync.py --no-wechat    # 只刷新 WhatsApp（--no-whatsapp 只刷新微信）
 ```
 
-每次刷新：增量解密微信 → 只读客户簿里已有客户的新消息（私人聊天、群聊都跳过）→ 更新“上次聊过”、记一笔“微信同步”、把你新发的话加进说话样本 → 用 `extract` 函数从客户发来的消息里提取价格和成交（标“微信自动”）→ 备注以 SMM 开头的新联系人自动建成 C 级客户。同步进度和登录令牌存在 `~/.config/nickel-crm/`，不进仓库。
+微信：增量解密微信 → 只读客户簿里已有客户的新消息（私人聊天、群聊都跳过）→ 更新“上次聊过”、记一笔“微信同步”、把你新发的话加进说话样本 → 用 `extract` 函数从客户发来的消息里提取价格和成交（标“微信自动”）→ 备注以 SMM 开头的新联系人自动建成 C 级客户。
+
+WhatsApp：把 WhatsApp Desktop 的本机数据库复制到临时目录再读（读完删掉，不碰原文件）→ 只读客户簿里 WhatsApp 客户和客户群的新消息和通话 → 更新“上次聊过”和来往条数、记一笔“WhatsApp同步”、加说话样本 → 提取情报（标“WhatsApp自动”）。客户卡的 `stats.wa.jid` 记着对应的会话；没记的按 `w-` 开头的 id 或电话号码对上。不在客户簿里的新会话不同步、不建卡，只在终端列出名字。
+
+微信或 WhatsApp 有一边出错，另一边照样刷新。同步进度和登录令牌存在 `~/.config/nickel-crm/`，不进仓库。
 
 需要在 Supabase 里多部署一个 `extract` 函数（`supabase/functions/extract/index.ts`）。
 
@@ -75,7 +80,7 @@ python3 sync/wechat_sync.py --no-ai    # 不用 AI 提取情报
 2026-10-27 从 WhatsApp Desktop 导出的对话（144 个会话）里挑出 108 个业务会话导入：106 位新客户（含十几个客户群，名字后面带“（群）”），李理和 Teoh 两位和微信里已有的人合并。同事、自己的号码、私人服务、内部群没有导入。
 
 - 客户 id 以 `w-` 开头（群是 `w-g-`），`stats.platform = "WhatsApp"`，`stats.lang` 记 Bruce 跟他用什么语言（en / zh / id），`stats.wa` 是 WhatsApp 的来往条数和通话次数。
-- 情报来源标“WhatsApp导入”，说话样本来源也是“WhatsApp导入”。
+- 情报来源标“WhatsApp导入”，说话样本来源也是“WhatsApp导入”。之后刷新进来的情报标“WhatsApp自动”。
 - 写开场白时，英文客户（lang 不是 zh）会用英文写，照「设置 → 我的说话习惯」里的英文部分和他的英文例句；记一笔、聊过了默认记成 WhatsApp。
 - 「客户」页可以按渠道筛选（微信 / WhatsApp）。
 
