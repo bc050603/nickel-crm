@@ -579,7 +579,7 @@ const STAGE_C = {"活跃":"var(--green)","降温":"var(--amber)","沉睡":"var(-
 const CATS = ["NPI/镍铁","不锈钢","纯镍/LME","印尼政策/矿","MHP/高冰/新能源","废钢/铬","海外/贸易","其他"];
 const CAT_C = {"NPI/镍铁":"var(--m-ask)","不锈钢":"var(--m-view)","纯镍/LME":"#6f6f6f","印尼政策/矿":"var(--m-chat)","MHP/高冰/新能源":"var(--m-meet)","废钢/铬":"var(--m-follow)","海外/贸易":"var(--red)","其他":"var(--ink-3)"};
 const SEGS = ["镍铁/NPI冶炼","新能源镍材料","不锈钢钢厂","国际贸易商/大宗供应链","不锈钢现货贸易/加工","海外钢厂/海外终端","废不锈钢/再生金属","物流/仓储","金融/投资/期货","资讯/咨询/数据同行","其他/未知"];
-const RELS = ["核心信息源","观点交流伙伴","需求方","商务对接","私交化","被动接收者","未激活"];
+const RELS = ["核心信息源","观点交流伙伴","需求方","商务对接","私交化","被动接收者","未激活","同事"];
 const CHANNELS = ["微信","WhatsApp","电话","见面"];
 const MODES = [
   {k:"询价", c:"var(--m-ask)", d:"先亮一个你听到的数字，再请他确认或纠正"},
@@ -870,7 +870,8 @@ function openDetail(id){ const c = byId(id); if (!c) return; openSheet(c.name, "
 function renderDetail(id){
   const c = byId(id); if (!c) { closeSheet(); return; }
   const kv = [["他能给我的", c.gives], ["他想要的", c.wants], ["沟通提醒", c.issues], ["互动特点", c.dynamics], ["导入时的情报", c.highlights], ["电话", c.phone]]
-    .filter(([,v]) => v && v !== "无").map(([k,v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("");
+    .filter(([,v]) => v && v !== "无").map(([k,v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")
+    + linkedinRow(c);
   const tl = [...logsOf(id).map(l => ({d:l.date, c:"var(--ink)", k:(l.channel||"记录"), t:[l.summary, l.next ? "下次：" + l.next : ""].filter(Boolean).join(" · "), tr:l.transcript || ""})),
               ...intelOf(id).map(i => ({d:i.date, c:CAT_C[i.category] || "var(--ink-3)", k:"情报 · " + (i.category||""), t:i.content}))].sort((a,b) => String(b.d).localeCompare(String(a.d)));
   const st = c.stats || {}, m = suggestMode(c);
@@ -943,6 +944,13 @@ async function sentOption(k){
 
 /* ---------- forms ---------- */
 function contactOptions(){ return [...S.contacts.values()].sort((a,b) => (TIERS.indexOf(a.tier) - TIERS.indexOf(b.tier)) || a.name.localeCompare(b.name, "zh")).map(c => `<option value="${esc(c.id)}">${esc(c.tier)} · ${esc(c.name)}${c.company ? "｜" + esc(c.company) : ""}</option>`).join(""); }
+// LinkedIn：链接和头衔记在 stats.linkedin（对照 LinkedIn 好友时补上的）；“很可能”是按名字和公司推断的，没百分百确认
+function linkedinRow(c){
+  const li = c.stats && c.stats.linkedin;
+  if (!li || !/^https:\/\/(www\.)?linkedin\.com\//.test(li.url || "")) return "";
+  const note = li.match && li.match !== "确定" ? `<span class="muted"> · ${esc(li.match)}是同一人</span>` : "";
+  return `<dt>LinkedIn</dt><dd><a href="${esc(li.url)}" target="_blank" rel="noopener">${esc(li.headline || li.name || "打开主页")}</a>${note}</dd>`;
+}
 function sel(name, opts, val, id){ return `<select id="${id}" name="${name}">${opts.map(o => `<option${o===val?" selected":""}>${esc(o)}</option>`).join("")}</select>`; }
 function openLog(id, back){
   const c = id ? byId(id) : null;
