@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
 
   // WhatsApp 客户多半用英文聊：语言看导入时记的 stats.lang，没有就看 Bruce 以前跟他说的话
   const stats = contact.stats ?? {};
-  const platform = stats.platform === "WhatsApp" ? "WhatsApp" : "微信";
+  const platform = stats.platform === "WhatsApp" || stats.platform === "LinkedIn" ? stats.platform : "微信";
   const samples: string[] = contact.my_samples ?? [];
   const en = stats.lang ? stats.lang !== "zh" : samples.filter((t) => latin(t) > 0.6).length > samples.length / 2;
   const ex = (examples.data ?? []).filter((e) => (latin(e.text) > 0.6) === en);
@@ -109,6 +109,9 @@ Deno.serve(async (req) => {
 【语言】
 ${en ? "用英文写，照 Bruce 平时跟这位客户的英文口吻（看下面他说过的话和例句）。对方是印尼人可以称 Pak/Bu，偶尔夹一两个印尼语词也行。不要写中文，也不要用微信表情代码（比如 [捂脸]）。下面的资料和情报是中文，用到时翻成自然的英文。" : "用中文写。"}
 
+${platform === "LinkedIn" ? `【渠道：LinkedIn 私信】
+对方多半只在 LinkedIn 上加了好友，还没跟 Bruce 聊过。第一条先用一句话说清楚自己是谁（SMM 的镍和不锈钢分析师）和为什么找他，再给一个对他有用的东西（一个数字、一个判断、一份报告），最后问一个他容易回答的问题。比微信、WhatsApp 正式一点，但不要写成邮件：不用 Dear、Regards，不用表情，不要群发腔。“下次跟进”里如果有现成的草稿，参考它的角度但写得更像 Bruce；如果写着还在等对方通过好友邀请，就写通过后的第一条。
+` : ""}
 【Bruce 的说话习惯】
 ${profile}
 

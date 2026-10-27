@@ -88,7 +88,8 @@ Deno.serve(async (req) => {
     const due = c.next_due ?? (c.tier !== "D" && cad[c.tier] ? (last ? addDays(last, cad[c.tier]) : t) : null);
     const dueTxt = !due ? "不提醒" : days(t, due) > 0 ? `超期${days(t, due)}天` : days(t, due) === 0 ? "今天到期" : `${-days(t, due)}天后到期`;
     const s = c.stats ?? {}; // 渠道和语言：导入时记的，或者在客户卡「编辑」里选的
-    const wa = s.platform === "WhatsApp" ? "（WhatsApp" + (s.lang === "zh" ? "" : "，英文") + "）" : s.lang && s.lang !== "zh" ? "（英文）" : "";
+    const wa = s.platform === "WhatsApp" ? "（WhatsApp" + (s.lang === "zh" ? "" : "，英文") + "）"
+      : s.platform === "LinkedIn" ? "（LinkedIn" + (s.lang && s.lang !== "zh" ? "，英文" : "") + "）" : s.lang && s.lang !== "zh" ? "（英文）" : "";
     return [c.id, c.name + wa, clip(c.company, 18), c.tier, c.relation ?? "", clip(c.segment, 10), ago, dueTxt,
       "能给:" + clip(c.gives, 60), "想要:" + clip(c.wants, 40), c.next_note ? "下次:" + clip(c.next_note, 30) : ""].join(" | ");
   }).join("\n");
@@ -111,6 +112,7 @@ ${(intel.data ?? []).map((i) => `- ${i.date} [${i.category}] ${clip(i.content, 9
 - 涉及价格和成交时，引用情报里的原话和日期；没有依据就直说不知道，不要编。
 - 名字相近的是不同的人（比如“周”和“周青”），公司以表里那一行为准，不要混在一起。
 - 关系是“同事”的是 Bruce 自己公司的同事，不是客户，不要推荐。
+- 标了（LinkedIn）的只在 LinkedIn 上加了好友、还没真正聊过，用 LinkedIn 私信联系，第一条要先介绍自己。
 - 名字后面标了（WhatsApp）的客户在 WhatsApp 上联系，标了“英文”的用英文聊；推荐时说清楚。contacts 里的 name 不要带这个括号。
 - reply 里提到的每一位推荐对象，都要放进 contacts。
 - 只回复 JSON：{"reply":"给 Bruce 看的回答","contacts":[{"id":"原样复制表格第一列的 id","name":"名字","why":"一句话理由","mode":"询价"}]}。contacts 最多 8 个，按优先级排；没有要推荐的人就给空数组。`;
