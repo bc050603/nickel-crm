@@ -551,7 +551,7 @@ function createSupabaseApi(){
     async opener(contactId, mode, note, signal){ return fn("opener", { contactId, mode, note }, signal); },
     async agent(messages, signal){ return fn("agent", { messages }, signal); },
     async transcribe(blob, name, meta, signal){ const f = new FormData(); f.append("file", blob, name); for (const k in meta) if (meta[k]) f.append(k, meta[k]); return fn("transcribe", f, signal); },
-    async callnote(contactId, transcript, date, signal){ return fn("callnote", { contactId, transcript, date }, signal); },
+    async callnote(contactId, transcript, date, signal, plain){ return fn("callnote", { contactId, transcript, plain, date }, signal); },
   };
 }
 </script>
@@ -1017,12 +1017,12 @@ function openEdit(id){
 
 /* ---------- 通话转录 ---------- */
 // 录音或上传 → 切成 5 分钟一段逐段转文字 → AI 整理要点、情报、下次跟进 → 改完再存。音频不上传到数据库，只存转写原文。
-const SEG = (window.CRM_TEST_API && window.CRM_TEST_API.seg) || 300;
+const SEG = (window.CRM_TEST_API && window.CRM_TEST_API.seg) || 120; // 分说话人的模型慢，每段 2 分钟才不会超时
 const MAX_UP = 24 * 1024 * 1024;
 const OK_EXT = /\.(mp3|m4a|mp4|mpeg|mpga|wav|webm|ogg|oga|flac)$/i;
 const mmss = s => pad(Math.floor(s / 60)) + ":" + pad(Math.floor(s % 60));
 function openCall(id){
-  const st = {type:"call", id:id || "", phase:"pick", date:today(), parts:[], texts:[], transcript:"", note:null, error:"", step:"", prog:0, ctl:null, rec:null};
+  const st = {type:"call", id:id || "", phase:"pick", date:today(), parts:[], texts:[], plain:[], refs:null, nspk:0, transcript:"", plainText:"", note:null, error:"", step:"", prog:0, ctl:null, rec:null};
   openSheet("通话转录", "", st); renderCall();
 }
 function renderCall(){
@@ -1064,7 +1064,7 @@ function renderCall(){
     body.innerHTML = `${who}
       <div class="prog" role="status"><div class="top"><span>${esc(st.step)}</span>${indet ? "" : `<span class="muted mono">${Math.round(st.prog * 100)}%</span>`}</div>
         <div class="bar${indet ? " indet" : ""}"><i style="--p:${Math.max(.02, st.prog)}"></i></div>
-        ${indet ? "" : `<p class="hint">${st.parts.length > 1 ? `录音切成了 ${st.parts.length} 段，一段一段转。` : ""}10 分钟的电话大概要一分钟。</p>`}</div>
+        ${indet ? "" : `<p class="hint">${st.parts.length > 1 ? `录音切成了 ${st.parts.length} 段，几段一起转。` : ""}会分出谁在说话，10 分钟的电话大概要三分钟。</p>`}</div>
       ${st.reading ? "" : `<div class="acts"><button class="btn ghost" type="button" id="cl-halt">停止</button></div>`}`;
     if (st.reading) return;
     $("cl-halt").onclick =() => { st.ctl && st.ctl.abort(); st.phase = "failed"; st.error = "已停止。点「继续」从停下的地方接着转。"; renderCall(); };
@@ -1072,9 +1072,9 @@ function renderCall(){
     const part = st.texts.filter(Boolean).join("\n");
     body.innerHTML = `${who}${err}
       <div class="acts"><button class="btn" type="button" id="cl-retry">${ico("refresh","sm")}继续</button><button class="btn ghost" type="button" id="cl-back">重新选</button></div>
-      ${part ? `<details class="raw"><summary>${ico("note","sm")}已经转好的 ${st.texts.length} / ${st.parts.length} 段</summary><div class="trx">${esc(part)}</div></details>` : ""}`;
+      ${part ? `<details class="raw"><summary>${ico("note","sm")}已经转好的 ${doneParts(st)} / ${st.parts.length} 段</summary><div class="trx">${esc(part)}</div></details>` : ""}`;
     $("cl-retry").onclick = () => runCall(st);
-    $("cl-back").onclick = () => { st.phase = "pick"; st.error = ""; st.parts = []; st.texts = []; renderCall(); };
+    $("cl-back").onclick = () => { resetParts(st); st.phase = "pick"; st.error = ""; renderCall(); };
   } else if (st.phase === "paste") {
     body.innerHTML = `${who}
       <div class="field"><label for="cl-paste">转写文字</label><textarea id="cl-paste" style="min-height:280px" placeholder="把通话的文字稿贴在这里" autofocus>${esc(st.transcript)}</textarea></div>
@@ -1103,6 +1103,7 @@ function renderCall(){
         <details class="raw"><summary>${ico("note","sm")}通话原文 · ${st.transcript.length} 字</summary>
           <div class="field" style="margin-top:8px"><textarea id="cr-t" name="transcript" style="min-height:240px" aria-label="通话原文">${esc(st.transcript)}</textarea></div>
           <div style="margin-top:8px"><button class="btn soft sm" type="button" data-redo>${ico("refresh","sm")}按改过的原文重新整理</button></div></details>
+        ${st.plainText ? `<details class="raw"><summary>${ico("note","sm")}不分说话人的版本 · 字更准</summary><div class="trx">${esc(st.plainText)}</div></details>` : ""}
         <p class="err" id="cr-err" hidden></p>
         <div class="formfoot"><button class="btn ghost" type="button" id="cr-cancel">取消</button><button class="btn" type="submit" id="cr-save">保存</button></div>
       </form>`;
@@ -1150,7 +1151,7 @@ async function startRec(st){
   } catch (_) {}
   try { R.wake = await navigator.wakeLock.request("screen"); } catch (_) {}
   st.ctl = new AbortController(); st.ctl.signal.addEventListener("abort", () => endRec(R));
-  st.rec = R; st.parts = []; st.texts = []; st.transcript = ""; st.phase = "rec"; renderCall();
+  st.rec = R; resetParts(st); st.phase = "rec"; renderCall();
 }
 function endRec(R){
   if (!R || R.ended) return; R.ended = true;
@@ -1215,38 +1216,89 @@ async function splitAudio(file){
   return parts;
 }
 async function useFile(st, file){
-  st.error = ""; st.phase = "work"; st.step = "读取录音…"; st.prog = -1; st.parts = []; st.texts = []; st.transcript = ""; st.reading = true; renderCall();
+  resetParts(st); st.error = ""; st.phase = "work"; st.step = "读取录音…"; st.prog = -1; st.reading = true; renderCall();
   try { const parts = await splitAudio(file); st.reading = false; if (S.sheet !== st) return; st.parts = parts; runCall(st); }
   catch (e) { st.reading = false; if (S.sheet !== st) return; st.phase = "pick"; st.error = errText(e); renderCall(); }
 }
 
 /* 逐段转文字（从停下的那段接着转），再整理 */
+function resetParts(st){ st.parts = []; st.texts = []; st.plain = []; st.refs = null; st.nspk = 0; st.transcript = ""; st.plainText = ""; }
+const doneParts = st => st.texts.filter(x => x != null).length;
+async function pool(items, n, fn){ const q = [...items]; await Promise.all(Array.from({length: Math.min(n, q.length)}, async () => { while (q.length) await fn(q.shift()); })); }
 async function runCall(st){
   const ctl = new AbortController(); st.ctl = ctl; st.error = ""; st.phase = "work";
-  const c = byId(st.id);
+  const c = byId(st.id), n = st.parts.length;
+  const progress = () => { const d = doneParts(st); st.step = n > 1 ? `转成文字 · 已转 ${d} / ${n} 段` : "转成文字…"; st.prog = d / Math.max(1, n); if (S.sheet === st && st.phase === "work") renderCall(); };
+  // 第一段先转，从里面截出每个人的声音样本；其余各段带上样本，三段一起转
+  const one = async k => {
+    const p = st.parts[k];
+    const r = await API.transcribe(p.blob, p.name, {contact: c ? c.name : "", prev: (st.plain[k - 1] || "").slice(-200), refs: st.refs ? JSON.stringify(st.refs) : ""}, ctl.signal);
+    const t = speakerLines(r, st);
+    if (k === 0 && n > 1 && t.segs.length) st.refs = await speakerRefs(p.blob, t.segs).catch(() => null);
+    st.texts[k] = t.text; st.plain[k] = String(r.text || "").trim(); progress();
+  };
   try {
-    if (st.parts.length) {
-      for (let k = st.texts.length; k < st.parts.length; k++) {
-        st.step = st.parts.length > 1 ? `转成文字 · 第 ${k + 1} / ${st.parts.length} 段` : "转成文字…"; st.prog = k / st.parts.length; renderCall();
-        const p = st.parts[k];
-        const r = await API.transcribe(p.blob, p.name, {contact: c ? c.name : "", prev: st.texts.join("").slice(-200)}, ctl.signal);
-        st.texts.push(String(r.text || "").trim());
-      }
+    if (n) {
+      progress();
+      if (st.texts[0] == null) await one(0);
+      await pool(st.parts.map((_, k) => k).filter(k => st.texts[k] == null), 3, one);
       st.transcript = st.texts.filter(Boolean).join("\n");
+      st.plainText = st.plain.filter(Boolean).join("\n");
+      if (st.plainText === st.transcript) st.plainText = "";
     }
-    if (!st.transcript) { st.phase = "pick"; st.parts = []; st.texts = []; st.error = "没听出说话的内容，检查一下录音有没有声音。"; renderCall(); return; }
+    if (!st.transcript) { resetParts(st); st.phase = "pick"; st.error = "没听出说话的内容，检查一下录音有没有声音。"; renderCall(); return; }
     await summarizeCall(st, ctl);
   } catch (e) {
     if (e && e.name === "AbortError") return;
     st.error = "转文字失败：" + errText(e); st.phase = "failed"; if (S.sheet === st) renderCall();
   }
 }
+/* 分说话人：各段的 A、B 统一编成「说话人1、2…」，同一人连着说的并成一行 */
+function speakerLines(r, st){
+  const segs = (r.segments || []).filter(s => s.text);
+  if (!segs.some(s => s.speaker)) return {text: String(r.text || "").trim(), segs: []};
+  const local = {}; let prev = "说话人?";
+  const named = segs.map(s => {
+    const who = !s.speaker ? prev : /^说话人/.test(s.speaker) ? s.speaker : (local[s.speaker] = local[s.speaker] || "说话人" + (++st.nspk));
+    prev = who; return {...s, who};
+  });
+  const rows = [];
+  for (const s of named) {
+    const last = rows[rows.length - 1];
+    if (last && last.who === s.who) last.text += (/[A-Za-z0-9]$/.test(last.text) && /^[A-Za-z0-9]/.test(s.text) ? " " : "") + s.text;
+    else rows.push({who: s.who, text: s.text});
+  }
+  return {text: rows.map(x => x.who + "：" + x.text).join("\n"), segs: named};
+}
+/* 从第一段里给每个说话人截 2–10 秒的声音，后面各段带上，OpenAI 才能认出是同一个人。
+   只给一部分人样本的话，没样本的人说的话会被漏掉，所以凑不齐就都不给。 */
+const dataUrl = b => new Promise((res, rej) => { const f = new FileReader(); f.onload = () => res(f.result); f.onerror = () => rej(f.error); f.readAsDataURL(b); });
+async function speakerRefs(blob, segs){
+  const turns = []; // 同一人连着说的几小段并成一轮
+  for (const s of segs) { const t = turns[turns.length - 1]; if (t && t.who === s.who && s.start - t.end < 1.5) t.end = s.end; else turns.push({who: s.who, start: s.start, end: s.end}); }
+  const best = {};
+  for (const t of turns) if (!best[t.who] || t.end - t.start > best[t.who].end - best[t.who].start) best[t.who] = t;
+  const who = Object.keys(best);
+  if (who.length < 2 || who.length > 4 || who.some(k => best[k].end - best[k].start < 2.2)) return null;
+  let ctx; try { ctx = new OfflineAudioContext(1, 1, 16000); } catch (_) { ctx = new OfflineAudioContext(1, 1, 44100); }
+  const pcm = toMono16k(await ctx.decodeAudioData(await blob.arrayBuffer())), refs = [];
+  for (const k of who) {
+    const t = best[k], a = Math.floor(t.start * 16000);
+    refs.push({name: k, url: await dataUrl(wav(pcm.subarray(a, a + Math.floor(Math.min(t.end - t.start, 9.5) * 16000)), 16000))});
+  }
+  return refs;
+}
+/* 整理时认出谁是 Bruce、谁是客户，把「说话人1：」换成名字 */
+function relabel(text, map, c){
+  return text.replace(/^(说话人[^：\n]{1,4})：/gm, (m, k) => (map[k] === "Bruce" ? "Bruce" : map[k] === "客户" ? (c ? c.name : "客户") : k) + "：");
+}
 async function summarizeCall(st, ctl){
   if (!ctl) { ctl = new AbortController(); st.ctl = ctl; }
   st.phase = "work"; st.step = "整理要点和情报…"; st.prog = -1; st.error = ""; renderCall();
   try {
-    const r = await API.callnote(st.id, st.transcript, st.date, ctl.signal);
-    st.note = {points: (r.points || []).join("\n"), intel: (r.intel || []).map(i => ({...i, on: true})), next: r.next || "", nextDate: r.nextDate || ""};
+    const r = await API.callnote(st.id, st.transcript, st.date, ctl.signal, st.plainText);
+    if (r.speakers) st.transcript = relabel(st.transcript, r.speakers, byId(st.id));
+    st.note ={points: (r.points || []).join("\n"), intel: (r.intel || []).map(i => ({...i, on: true})), next: r.next || "", nextDate: r.nextDate || ""};
   } catch (e) {
     if (e && e.name === "AbortError") return;
     st.note = st.note || {points: "", intel: [], next: "", nextDate: ""};
@@ -1261,7 +1313,8 @@ async function saveCall(st){
   const summary = n.points.trim() || "通话（要点见原文）", picked = n.intel.filter(i => i.on && i.content.trim());
   $("cr-save").disabled = true;
   try {
-    await saveLog({contactId: c.id, channel: "电话", date: st.date, summary, next: n.next.trim(), nextDate: n.nextDate, transcript: st.transcript});
+    const transcript = st.transcript + (st.plainText ? "\n\n—— 不分说话人的版本（字更准）——\n" + st.plainText : "");
+    await saveLog({contactId: c.id, channel: "电话", date: st.date, summary, next: n.next.trim(), nextDate: n.nextDate, transcript});
     for (const i of picked) await API.addIntel({contactId: c.id, contactName: c.name, date: st.date, category: i.category, content: i.content.trim(), source: "通话转录"});
     toast(picked.length ? `记下了，${picked.length} 条情报进了情报库` : "记下了");
     await refresh(); openDetail(c.id);

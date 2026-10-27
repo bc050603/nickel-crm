@@ -26,9 +26,10 @@ Deno.serve(async (req) => {
   const { data: auth } = await sb.auth.getUser();
   if (!auth?.user) return json({ error: "请先登录" }, 401);
 
-  let input: { contactId?: string; transcript?: string; date?: string } = {};
+  let input: { contactId?: string; transcript?: string; plain?: string; date?: string } = {};
   try { input = await req.json(); } catch { return json({ error: "请求格式不对" }, 400); }
-  const transcript = String(input.transcript ?? "").trim().slice(0, 30000);
+  const transcript = String(input.transcript ?? "").trim().slice(0, 20000);
+  const plain = String(input.plain ?? "").trim().slice(0, 20000); // 同一通电话不分说话人、但字更准的版本
   if (!transcript) return json({ error: "转写是空的" }, 400);
   const day = /^\d{4}-\d{2}-\d{2}$/.test(input.date ?? "") ? input.date! : today();
   // 往后两周的日期表：模型自己推“下周三”常常算错，让它照表查
@@ -49,7 +50,8 @@ Deno.serve(async (req) => {
 
   const prompt = `下面是镍和不锈钢分析师 Bruce（SMM 马来西亚）和${who}一通电话的机器转写。
 ${ctx}
-转写没有标说话人，可能有错字、同音字和断句问题。按内容判断哪些话是客户说的、哪些是 Bruce 说的；行业词按常识纠正（比如“年铁”是“镍铁”，“聂点”是“镍点”），但不要补出转写里没有的内容。
+转写可能有错字、同音字和断句问题。行业词按常识纠正（比如“年铁”是“镍铁”，“聂点”是“镍点”），但不要补出转写里没有的内容。
+转写如果按说话人分了行（“说话人1：”“说话人2：”），那是机器按声音分的，偶尔会分错。先判断每个说话人是 Bruce 还是客户（Bruce 是 SMM 的分析师，一般是他自报家门、问价、说要发报告），写进 speakers。没分说话人的，就按内容判断哪些话是客户说的。
 这通电话是 ${day}（${WEEK[new Date(day + "T00:00:00Z").getUTCDay()]}）打的。
 
 整理成下面四样：
@@ -64,6 +66,7 @@ ${ctx}
    - 客户的判断和看法也可以收，以“观点：”开头，写清楚是对什么的看法。
    - 保留原来的数字，不要换算。补全以后还是看不懂的，就不要这条。没有就给空数组。
    - 转写可能把币种、口径听错。币种和口径对不上常识时（比如“美元/镍点到厂”），照原文写，并在这条末尾加“（待核对）”。
+   - 有两份转写时，同一个数字两份说法不一样，或者数字明显不像（比如“E0.30”），写最合理的那个，并在末尾加“（待核对：另一份听成 X）”。
    - category 只能从这里选：${CATS.join("、")}。
 
 3. next：下次要跟进的事，比如 Bruce 答应发的东西、客户要的数据、约好再聊的话题。没有就写空字符串。
@@ -71,10 +74,15 @@ ${ctx}
 4. nextDate：如果说定了哪天再联系（比如“下周三再打给你”），从下面的日期表里查出 YYYY-MM-DD；没说定就给 null。
 ${cal}
 
-转写：
+${plain ? `转写一（按说话人分了行，用来判断谁说的，字可能不准）：
 ${transcript}
 
-只回复 JSON：{"points":["要点"],"intel":[{"category":"品类","content":"情报内容"}],"next":"","nextDate":null}`;
+转写二（同一通电话，没分说话人，但字更准；数字、品名、公司名以这份为准）：
+${plain}` : `转写：
+${transcript}`}
+
+只回复 JSON：{"speakers":{"说话人1":"Bruce","说话人2":"客户"},"points":["要点"],"intel":[{"category":"品类","content":"情报内容"}],"next":"","nextDate":null}
+speakers 的值只能是 Bruce、客户、其他；转写没分说话人就给 {}。`;
 
   const body: Record<string, unknown> = { model, messages: [{ role: "user", content: prompt }], response_format: { type: "json_object" } };
   const call = () => fetch("https://api.openai.com/v1/chat/completions", {
@@ -97,5 +105,9 @@ ${transcript}
     .slice(0, 10)
     .map((i: any) => ({ category: CATS.includes(i.category) ? i.category : "其他", content: clip(i.content, 300) }));
   const nextDate = /^\d{4}-\d{2}-\d{2}$/.test(out.nextDate ?? "") && out.nextDate >= day ? out.nextDate : null;
-  return json({ points, intel, next: clip(out.next, 200), nextDate });
+  const speakers: Record<string, string> = {};
+  if (out.speakers && typeof out.speakers === "object") {
+    for (const [k, v] of Object.entries(out.speakers)) if (/^说话人/.test(k) && ["Bruce", "客户", "其他"].includes(String(v))) speakers[k] = String(v);
+  }
+  return json({ speakers, points, intel, next: clip(out.next, 200), nextDate });
 });
