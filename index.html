@@ -1023,6 +1023,7 @@ function openEdit(id){
       <div class="frow"><div class="field"><label for="ec-r">角色</label><input type="text" id="ec-r" name="role" value="${v("role")}" placeholder="采购 / 销售 / 研究员…"></div><div class="field"><label for="ec-p">电话</label><input type="tel" id="ec-p" name="phone" value="${v("phone")}"></div></div>
       <div class="frow"><div class="field"><label for="ec-t">分级</label>${sel("tier", TIERS, c.tier, "ec-t")}</div><div class="field"><label for="ec-rel">关系类型</label>${sel("relation", RELS, c.relation, "ec-rel")}</div></div>
       <div class="field"><label for="ec-seg">产业链位置</label>${sel("segment", SEGS, c.segment, "ec-seg")}</div>
+      <div class="frow"><div class="field"><label for="ec-pl">主要在哪聊</label>${sel("platform", ["微信","WhatsApp"], platformOf(c), "ec-pl")}</div><div class="field"><label for="ec-lg">开场白用什么语言</label>${sel("lang", ["中文","英文"], ((c.stats && c.stats.lang) || "zh") === "zh" ? "中文" : "英文", "ec-lg")}</div></div>
       <div class="field"><label for="ec-g">他能给我的</label><textarea id="ec-g" name="gives">${v("gives")}</textarea></div>
       <div class="field"><label for="ec-w">他想要的</label><textarea id="ec-w" name="wants">${v("wants")}</textarea></div>
       <div class="field"><label for="ec-i">沟通提醒</label><textarea id="ec-i" name="issues">${v("issues")}</textarea></div>
@@ -1035,6 +1036,9 @@ function openEdit(id){
     e.preventDefault();
     const fd = new FormData(e.target), data = {}; for (const [k,val] of fd.entries()) data[k] = String(val).trim();
     if (!data.name) { $("ec-err").textContent = "名字不能空着。"; $("ec-err").hidden = false; return; }
+    // 渠道和语言放在 stats 里（开场白、参谋、同步都看这里）
+    data.stats = {...((id && byId(id).stats) || {}), platform: data.platform, lang: data.lang === "中文" ? "zh" : "en"};
+    delete data.platform; delete data.lang;
     data.updatedAt = new Date().toISOString();
     $("ec-save").disabled = true;
     try {

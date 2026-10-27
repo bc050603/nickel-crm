@@ -87,7 +87,8 @@ Deno.serve(async (req) => {
     const ago = last ? `${last}（${days(t, last)}天前）` : "从未回复";
     const due = c.next_due ?? (c.tier !== "D" && cad[c.tier] ? (last ? addDays(last, cad[c.tier]) : t) : null);
     const dueTxt = !due ? "不提醒" : days(t, due) > 0 ? `超期${days(t, due)}天` : days(t, due) === 0 ? "今天到期" : `${-days(t, due)}天后到期`;
-    const wa = c.stats?.platform === "WhatsApp" ? "（WhatsApp" + (c.stats?.lang === "zh" ? "" : "，英文") + "）" : "";
+    const s = c.stats ?? {}; // 渠道和语言：导入时记的，或者在客户卡「编辑」里选的
+    const wa = s.platform === "WhatsApp" ? "（WhatsApp" + (s.lang === "zh" ? "" : "，英文") + "）" : s.lang && s.lang !== "zh" ? "（英文）" : "";
     return [c.id, c.name + wa, clip(c.company, 18), c.tier, c.relation ?? "", clip(c.segment, 10), ago, dueTxt,
       "能给:" + clip(c.gives, 60), "想要:" + clip(c.wants, 40), c.next_note ? "下次:" + clip(c.next_note, 30) : ""].join(" | ");
   }).join("\n");

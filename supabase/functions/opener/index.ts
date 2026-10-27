@@ -19,6 +19,7 @@ const MODES: Record<string, string> = {
   "回访跟进": "目标是接住上次聊的事（看记录和“下次跟进”），问进展或结果，让他知道你记得。",
 };
 
+const SHAREABLE = ["NPI/镍铁", "不锈钢", "纯镍/LME", "印尼政策/矿", "MHP/高冰/新能源", "废钢/铬", "海外/贸易"];
 const DEFAULT_PROFILE = "短句、口语，常带“呀、哈、嘛、啦、滴”这类语气词，常用“好滴、嗯嗯、确实、哈哈哈”；称呼X总，熟的叫哥、姐；偶尔一个表情如[捂脸][抱拳]；绝不用客服腔。";
 const DEFAULT_PROFILE_EN = "英文（WhatsApp）：很短，一条中位数 5 个词，一件事拆几条发，句尾大多不加标点；开场 “Morning Pak X” “Hey X!” “Hi Mr X, Bruce here”；常用 alright、yup、sure、noted、no worries、btw、tho、haha、bro；问价先说听到的 “I heard … at …”；表情很少，常用 🤣 😭 🙏；不用 Dear、Kindly、Regards 这种邮件腔。";
 // 拉丁字母占比：判断一句话是英文（含印尼/马来文）还是中文
@@ -83,7 +84,8 @@ Deno.serve(async (req) => {
     sb.from("contacts").select("*").eq("id", input.contactId).maybeSingle(),
     sb.from("logs").select("date,channel,summary,next").eq("contact_id", input.contactId).order("date", { ascending: false }).limit(5),
     sb.from("intel").select("date,category,content").eq("contact_id", input.contactId).order("date", { ascending: false }).limit(5),
-    sb.from("intel").select("date,category,content").or(`contact_id.is.null,contact_id.neq.${input.contactId}`).order("date", { ascending: false }).limit(8),
+    // 别的客户给的情报只拿可以对外说的品类（市场价格、政策这类），“其他”里可能有别人的私事，不拿
+    sb.from("intel").select("date,category,content").or(`contact_id.is.null,contact_id.neq.${input.contactId}`).in("category", SHAREABLE).order("date", { ascending: false }).limit(8),
     sb.from("style_examples").select("text,source").eq("category", mode).order("created_at", { ascending: false }).limit(500),
     sb.from("settings").select("style_profile").maybeSingle(),
   ]);
