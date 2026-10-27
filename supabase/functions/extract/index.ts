@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
   const { data: auth } = await sb.auth.getUser();
   if (!auth?.user) return json({ error: "请先登录" }, 401);
 
-  let input: { contactName?: string; messages?: { time: string; me: boolean; text: string }[] } = {};
+  let input: { contactName?: string; contactCompany?: string; messages?: { time: string; me: boolean; text: string }[] } = {};
   try { input = await req.json(); } catch { return json({ error: "请求格式不对" }, 400); }
   const msgs = (input.messages ?? []).filter((m) => m && typeof m.text === "string" && m.text.trim()).slice(-60);
   if (!msgs.length) return json({ items: [] });
@@ -32,13 +32,26 @@ Deno.serve(async (req) => {
   if (!key || !model) return json({ error: "Supabase 里还没设置 OPENAI_API_KEY 或 OPENAI_MODEL" }, 500);
 
   const convo = msgs.map((m) => `${m.time} ${m.me ? "Bruce" : (input.contactName ?? "客户")}：${m.text.slice(0, 400)}`).join("\n");
-  const prompt = `下面是镍和不锈钢分析师 Bruce 和客户「${input.contactName ?? ""}」最近的微信对话。
-把客户说出来的市场情报挑出来：价格、成交（价、量、品位、交货）、报价、升贴水、排产、减产、库存、出货、招标、政策、项目动态。
-规则：
-- 只要客户说的，或客户明确确认过的；Bruce 自己说的不算。
-- 闲聊、客套、没有信息量的不要。没有就返回空数组。
-- 每条一句话，保留原来的数字、单位和说法，不要改写成别的数。日期用那条消息的日期。
+  const prompt = `下面是镍和不锈钢分析师 Bruce 和客户「${input.contactName ?? ""}」${input.contactCompany ? `（${input.contactCompany}）` : ""}最近的微信对话。
+把客户说出来的市场情报挑出来：价格、成交、报价、意向、升贴水、排产、减产、库存、出货、招标、政策、进出口、项目动态。
+
+每条情报要单独拿出来也能看懂。写成一句完整的话，把能确定的信息按这个顺序写全：
+1. 主体：哪家公司、钢厂、贸易商、哪个国家或地区。对话里没说就写“客户”，不要编。
+2. 品种和规格：比如 NPI（含镍 11-12%）、304 冷轧、MHP、高冰镍、废不锈钢。
+3. 发生了什么：成交、报价、意向价、排产、减产、库存、政策、进口数据等。
+4. 数字和单位：价格口径（到厂、舱底、FOB、CIF）、元/镍点或美元/镍点、元/吨、吨数、时间。
+品种、口径和单位要从上下文推断补全（比如上一句在聊 NPI，这一句“1090 卖给他”就是 NPI 价格）。补全以后还是看不懂的，就不要这条。
+
+其他规则：
+- 同一件事分成几条消息说的，合并成一条。
+- 只要客户说的，或客户明确确认过的；Bruce 自己说的不算。闲聊、客套不要。没有就返回空数组。
+- 客户的判断和看法也可以收，但要以“观点：”开头，写清楚是对什么的看法。
+- 保留原来的数字，不要换算成别的数。日期用那条消息的日期。
 - 品类只能从这里选：${CATS.join("、")}。
+
+格式参考（内容是虚构的）：
+- 某印度买家询低磷 NPI，客户报 135 美元/镍点 FOB，对应国内约 1030 元/镍点仍有利润
+- 观点：客户认为印尼 NPI 减产难落地，因为满产时单位成本最低
 
 对话：
 ${convo}
