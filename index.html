@@ -670,7 +670,24 @@ async function refresh(){
     S.loaded = true; banner(""); render();
   } catch (e) { banner("读取失败：" + errText(e)); }
 }
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && S.user && !S.sheet && !S.asking) refresh(); });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { checkUpdate(); if (S.user && !S.sheet && !S.asking) refresh(); } });
+
+/* 网站更新后，开着的旧页面不会自己变（GitHub Pages 还让浏览器缓存 10 分钟）。
+   切回这个页面时看一眼线上的版本：和自己这份代码不一样就换成新版；正在录音、转录、编辑时先提示，不打断。 */
+let lastCheck = 0;
+async function checkUpdate(){
+  if (Date.now() - lastCheck < 60000) return;
+  lastCheck = Date.now();
+  try {
+    const mine = [...document.scripts].map(s => s.textContent).find(t => t.includes("const TIERS ="));
+    const live = await (await fetch(location.pathname + "?check=" + Date.now(), {cache: "no-store"})).text();
+    if (!mine || !live.includes("const TIERS =") || live.includes(mine)) return;
+    const update = async () => { await fetch(location.pathname, {cache: "reload"}).catch(() => {}); location.reload(); };
+    if (S.sheet || S.call || S.asking) { banner("网站有新版本，忙完点这里刷新"); $("banner").onclick = update; return; }
+    update();
+  } catch (_) {}
+}
+setTimeout(checkUpdate, 3000);
 
 /* ---------- views ---------- */
 function setView(v){
