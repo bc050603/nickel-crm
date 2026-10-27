@@ -70,5 +70,14 @@ python3 sync/wechat_sync.py --no-ai    # 不用 AI 提取情报
 
 需要在 Supabase 里多部署一个 `extract` 函数（`supabase/functions/extract/index.ts`）。
 
+## WhatsApp 客户
+
+2026-10-27 从 WhatsApp Desktop 导出的对话（144 个会话）里挑出 108 个业务会话导入：106 位新客户（含十几个客户群，名字后面带“（群）”），李理和 Teoh 两位和微信里已有的人合并。同事、自己的号码、私人服务、内部群没有导入。
+
+- 客户 id 以 `w-` 开头（群是 `w-g-`），`stats.platform = "WhatsApp"`，`stats.lang` 记 Bruce 跟他用什么语言（en / zh / id），`stats.wa` 是 WhatsApp 的来往条数和通话次数。
+- 情报来源标“WhatsApp导入”，说话样本来源也是“WhatsApp导入”。
+- 写开场白时，英文客户（lang 不是 zh）会用英文写，照「设置 → 我的说话习惯」里的英文部分和他的英文例句；记一笔、聊过了默认记成 WhatsApp。
+- 「客户」页可以按渠道筛选（微信 / WhatsApp）。
+
 ## 更新客户数据
 重新导出微信聊天后，让 Claude 重新分析并生成新的 `crm-seed.json`，再到「设置 → 导入数据」导入。同一位客户会更新资料，你写的记录和情报不会丢。

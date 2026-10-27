@@ -424,6 +424,7 @@ details.raw > summary:hover { color: var(--ink); }
           <select class="select" id="p-stage" aria-label="状态"><option value="">全部状态</option></select>
           <select class="select" id="p-seg" aria-label="产业链位置"><option value="">全部产业链</option></select>
           <select class="select" id="p-rel" aria-label="关系类型"><option value="">全部关系</option></select>
+          <select class="select" id="p-plat" aria-label="渠道"><option value="">全部渠道</option><option>微信</option><option>WhatsApp</option></select>
           <button class="btn line sm" type="button" data-act="new-contact"><svg class="i sm"><use href="#i-plus"/></svg>新客户</button>
         </div>
         <div class="list" id="p-list"><div class="skeleton">正在读取…</div></div>
@@ -566,7 +567,7 @@ const CATS = ["NPI/镍铁","不锈钢","纯镍/LME","印尼政策/矿","MHP/高�
 const CAT_C = {"NPI/镍铁":"var(--m-ask)","不锈钢":"var(--m-view)","纯镍/LME":"#6f6f6f","印尼政策/矿":"var(--m-chat)","MHP/高冰/新能源":"var(--m-meet)","废钢/铬":"var(--m-follow)","海外/贸易":"var(--red)","其他":"var(--ink-3)"};
 const SEGS = ["镍铁/NPI冶炼","新能源镍材料","不锈钢钢厂","国际贸易商/大宗供应链","不锈钢现货贸易/加工","海外钢厂/海外终端","废不锈钢/再生金属","物流/仓储","金融/投资/期货","资讯/咨询/数据同行","其他/未知"];
 const RELS = ["核心信息源","观点交流伙伴","需求方","商务对接","私交化","被动接收者","未激活"];
-const CHANNELS = ["微信","电话","见面"];
+const CHANNELS = ["微信","WhatsApp","电话","见面"];
 const MODES = [
   {k:"询价", c:"var(--m-ask)", d:"先亮一个你听到的数字，再请他确认或纠正"},
   {k:"日常闲聊", c:"var(--m-chat)", d:"这次不问价，像朋友一样聊近况"},
@@ -581,7 +582,7 @@ const AVC = ["#fde2e1","#fdebd3","#e2f1d8","#d8ebf8","#e6e0fb","#fadff0","#d9f1e
 
 const API = window.CRM_TEST_API || createSupabaseApi();
 const S = { contacts:new Map(), logs:[], intel:[], cad:{...DEFAULT_CAD}, profile:"", learned:0, loaded:false, view:"today", showC:false, user:null,
-  pf:{q:"", tier:"", stage:"", seg:"", rel:""}, inf:{q:"", cat:""}, sheet:null, chat:[], asking:null };
+  pf:{q:"", tier:"", stage:"", seg:"", rel:"", plat:""}, inf:{q:"", cat:""}, sheet:null, chat:[], asking:null };
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -626,6 +627,10 @@ const tierB = t => `<span class="tier ${esc(t)}" title="${esc(t)} 级 · ${TIER_
 const stageP = c => { const s = stage(c); return `<span class="tag" style="--tc:${STAGE_C[s]}">${s}</span>`; };
 const modeP = m => `<span class="pill" style="--tc:${MODE_C[m] || "var(--ink-3)"}">${esc(m)}</span>`;
 const nextText = c => c.nextNote || c.next || "";
+// 渠道：WhatsApp 导入的客户 stats.platform = "WhatsApp"，两边都有的客户 stats 里同时有 first（微信）和 wa
+const platformOf = c => c.stats && c.stats.platform === "WhatsApp" ? "WhatsApp" : "微信";
+const onWA = c => !!(c.stats && (c.stats.platform === "WhatsApp" || c.stats.wa));
+const onWeChat = c => platformOf(c) === "微信" || !!(c.stats && c.stats.first);
 const byId = id => S.contacts.get(id);
 const logsOf = id => S.logs.filter(l => l.contactId === id);
 const intelOf = id => S.intel.filter(i => i.contactId === id);
@@ -743,6 +748,7 @@ function buildFilters(){
   $("p-stage").onchange = e => { S.pf.stage = e.target.value; renderPeople(); };
   $("p-seg").onchange = e => { S.pf.seg = e.target.value; renderPeople(); };
   $("p-rel").onchange = e => { S.pf.rel = e.target.value; renderPeople(); };
+  $("p-plat").onchange = e => { S.pf.plat = e.target.value; renderPeople(); };
   $("p-q").oninput = e => { S.pf.q = e.target.value.trim().toLowerCase(); renderPeople(); };
   $("i-cat").onchange = e => { S.inf.cat = e.target.value; renderIntel(); };
   $("i-q").oninput = e => { S.inf.q = e.target.value.trim().toLowerCase(); renderIntel(); };
@@ -752,7 +758,8 @@ function renderPeople(){
   const f = S.pf;
   const L = [...S.contacts.values()].filter(c =>
     (!f.tier || c.tier === f.tier) && (!f.stage || stage(c) === f.stage) && (!f.seg || c.segment === f.seg) && (!f.rel || c.relation === f.rel) &&
-    (!f.q || [c.name, c.wechatName, c.company, c.role, c.gives, c.wants, c.highlights, (c.topics||[]).join(" ")].join(" ").toLowerCase().includes(f.q))
+    (!f.plat || (f.plat === "WhatsApp" ? onWA(c) : onWeChat(c))) &&
+    (!f.q || [c.name, c.wechatName, c.company, c.role, c.phone, c.gives, c.wants, c.highlights, (c.topics||[]).join(" ")].join(" ").toLowerCase().includes(f.q))
   ).sort((a,b) => (TIERS.indexOf(a.tier) - TIERS.indexOf(b.tier)) || String(lastTouch(b)||"").localeCompare(String(lastTouch(a)||"")));
   $("p-count").textContent = `${L.length} / ${S.contacts.size} 位`;
   if (!S.contacts.size) { $("p-list").innerHTML = `<div class="empty"><b>还没有客户</b><p>点「新客户」加第一位，或者到设置里导入。</p></div>`; return; }
@@ -848,13 +855,14 @@ function renderDetail(id){
   $("drawer-title").textContent = "";
   $("drawer-body").innerHTML = `
     <div class="prof">${av(c, 1)}<div style="min-width:0"><h2>${esc(c.name)} ${tierB(c.tier)}</h2><div class="sub">${esc(c.company || "公司未填")}${c.role ? " · " + esc(c.role) : ""}</div></div></div>
-    <div class="facts">${stageP(c)}<span class="tag" style="--tc:var(--ink-3)">${esc(c.relation || "")}</span><span class="tag" style="--tc:var(--ink-3)">${esc(c.segment || "")}</span><span class="muted" style="font-size:12.5px">上次聊 ${ago(lastTouch(c))}</span>${dueTxt(c)}</div>
+    <div class="facts">${stageP(c)}${onWA(c) ? `<span class="tag" style="--tc:var(--green)">WhatsApp${onWeChat(c) ? " + 微信" : ""}</span>` : ""}<span class="tag" style="--tc:var(--ink-3)">${esc(c.relation || "")}</span><span class="tag" style="--tc:var(--ink-3)">${esc(c.segment || "")}</span><span class="muted" style="font-size:12.5px">上次聊 ${ago(lastTouch(c))}</span>${dueTxt(c)}</div>
     <div class="acts"><button class="btn" type="button" data-compose="${esc(id)}" data-mode="${esc(m)}">${ico("pen","sm")}写开场白</button><button class="btn soft" type="button" data-log="${esc(id)}">记一笔</button><button class="btn soft" type="button" data-call="${esc(id)}">${ico("mic","sm")}通话转录</button><button class="btn soft" type="button" data-touch="${esc(id)}">${ico("check","sm")}聊过了</button><button class="btn ghost" type="button" data-edit="${esc(id)}">编辑</button></div>
     ${nextText(c) ? `<div class="card"><span class="lbl">下一步</span><div>${esc(nextText(c))}</div></div>` : ""}
     ${kv ? `<div class="block"><span class="lbl">资料</span><dl class="kv">${kv}</dl></div>` : ""}
     ${(c.mySamples||[]).length ? `<div class="block"><span class="lbl">你以前跟他这么聊</span><div class="quote">${c.mySamples.slice(-6).map(esc).join("<br>")}</div></div>` : ""}
     <div class="block"><span class="lbl">往来</span>${tl.length ? `<div class="tl">${tl.map(x => `<div class="tli" style="--tc:${x.c}"><span class="pt"></span><div style="min-width:0"><div class="t">${esc(x.t)}</div><div class="meta">${esc(day10(x.d))} · ${esc(x.k)}</div>${x.tr ? `<details class="raw"><summary>${ico("note","sm")}通话原文 · ${x.tr.length} 字</summary><div class="trx">${esc(x.tr)}</div></details>` : ""}</div></div>`).join("")}</div>` : `<p class="hint">还没有记录。聊完点「记一笔」，下次就能在这里看到。</p>`}</div>
-    ${st.first ? `<p class="hint">微信导出：我发 ${st.me||0} · 他发 ${st.them||0} · 群发 ${st.mass||0} · 通话 ${st.calls||0} · 首次 ${esc(st.first)}</p>` : ""}`;
+    ${st.first ? `<p class="hint">微信导出：我发 ${st.me||0} · 他发 ${st.them||0} · 群发 ${st.mass||0} · 通话 ${st.calls||0} · 首次 ${esc(st.first)}</p>` : ""}
+    ${st.wa ? `<p class="hint">WhatsApp 导出：我发 ${st.wa.me||0} · 他发 ${st.wa.them||0} · 通话 ${st.wa.calls||0} · 首次 ${esc(st.wa.first||"")}</p>` : ""}`;
 }
 
 /* ---------- composer (opener) ---------- */
@@ -905,7 +913,7 @@ async function sentOption(k){
   const ed = $("cp-edit"), text = (st.editing === k && ed ? ed.value : o.text).trim();
   if (!text) return;
   try {
-    await saveLog({contactId:c.id, channel:"微信", date:today(), summary:`[${st.mode}] ${text}`});
+    await saveLog({contactId:c.id, channel:platformOf(c), date:today(), summary:`[${st.mode}] ${text}`});
     await API.addStyle({category:st.mode, text, contactId:c.id, source:"我发的"});
     S.learned++; toast("记下了，也学会了这句"); closeSheet(); refresh();
   } catch (e) { toast(errText(e)); }
@@ -934,7 +942,8 @@ function openLog(id, back){
       <p class="err" id="lg-err" hidden></p>
       <div class="formfoot"><button class="btn ghost" type="button" id="lg-cancel">取消</button><button class="btn" type="submit" id="lg-save">保存</button></div>
     </form>`, {type:"form"});
-  if (c) $("lg-c").value = c.id;
+  if (c) { $("lg-c").value = c.id; $("lg-ch-" + CHANNELS.indexOf(platformOf(c))).checked = true; }
+  $("lg-c").onchange = e => { const x = byId(e.target.value); if (x) $("lg-ch-" + CHANNELS.indexOf(platformOf(x))).checked = true; };
   $("lg-cancel").onclick = () => back ? openDetail(back) : closeSheet();
   $("lg-call").onclick = () => openCall($("lg-c").value);
   $("f-log").onsubmit = async e => {
@@ -961,7 +970,7 @@ async function saveLog(r){
 }
 async function touchToday(id){
   const c = byId(id); if (!c) return;
-  try { await saveLog({contactId:id, channel:"微信", date:today(), summary:"聊过（快速打卡）"}); toast(`记下了：今天和${c.name}聊过`); await refresh(); }
+  try { await saveLog({contactId:id, channel:platformOf(c), date:today(), summary:"聊过（快速打卡）"}); toast(`记下了：今天和${c.name}聊过`); await refresh(); }
   catch (e) { toast(errText(e)); }
 }
 function openIntel(){

@@ -20,6 +20,9 @@ const MODES: Record<string, string> = {
 };
 
 const DEFAULT_PROFILE = "短句、口语，常带“呀、哈、嘛、啦、滴”这类语气词，常用“好滴、嗯嗯、确实、哈哈哈”；称呼X总，熟的叫哥、姐；偶尔一个表情如[捂脸][抱拳]；绝不用客服腔。";
+const DEFAULT_PROFILE_EN = "英文（WhatsApp）：很短，一条中位数 5 个词，一件事拆几条发，句尾大多不加标点；开场 “Morning Pak X” “Hey X!” “Hi Mr X, Bruce here”；常用 alright、yup、sure、noted、no worries、btw、tho、haha、bro；问价先说听到的 “I heard … at …”；表情很少，常用 🤣 😭 🙏；不用 Dear、Kindly、Regards 这种邮件腔。";
+// 拉丁字母占比：判断一句话是英文（含印尼/马来文）还是中文
+const latin = (s: string) => { const l = (s.match(/[A-Za-z]/g) ?? []).length, z = (s.match(/[一-鿿]/g) ?? []).length; return l / Math.max(1, l + z * 2); };
 
 function clientFor(req: Request) {
   const url = Deno.env.get("SUPABASE_URL")!;
@@ -81,21 +84,31 @@ Deno.serve(async (req) => {
     sb.from("logs").select("date,channel,summary,next").eq("contact_id", input.contactId).order("date", { ascending: false }).limit(5),
     sb.from("intel").select("date,category,content").eq("contact_id", input.contactId).order("date", { ascending: false }).limit(5),
     sb.from("intel").select("date,category,content").or(`contact_id.is.null,contact_id.neq.${input.contactId}`).order("date", { ascending: false }).limit(8),
-    sb.from("style_examples").select("text,source").eq("category", mode).order("created_at", { ascending: false }).limit(80),
+    sb.from("style_examples").select("text,source").eq("category", mode).order("created_at", { ascending: false }).limit(500),
     sb.from("settings").select("style_profile").maybeSingle(),
   ]);
   const contact = c.data;
   if (!contact) return json({ error: "找不到这位客户" }, 404);
 
-  const ex = examples.data ?? [];
-  const learned = ex.filter((e) => e.source !== "聊天导入").slice(0, 8);
-  const imported = shuffle(ex.filter((e) => e.source === "聊天导入")).slice(0, 10);
+  // WhatsApp 客户多半用英文聊：语言看导入时记的 stats.lang，没有就看 Bruce 以前跟他说的话
+  const stats = contact.stats ?? {};
+  const platform = stats.platform === "WhatsApp" ? "WhatsApp" : "微信";
+  const samples: string[] = contact.my_samples ?? [];
+  const en = stats.lang ? stats.lang !== "zh" : samples.filter((t) => latin(t) > 0.6).length > samples.length / 2;
+  const ex = (examples.data ?? []).filter((e) => (latin(e.text) > 0.6) === en);
+  const learned = ex.filter((e) => !/导入$/.test(e.source)).slice(0, 8);
+  const imported = shuffle(ex.filter((e) => /导入$/.test(e.source))).slice(0, 10);
   const lines = (rows: Record<string, unknown>[] | null, f: (r: any) => string) => (rows && rows.length ? rows.map(f).join("\n") : "（暂无）");
+  let profile = settings.data?.style_profile || DEFAULT_PROFILE;
+  if (en && !/英文|WhatsApp/.test(profile)) profile += "\n" + DEFAULT_PROFILE_EN;
 
-  const prompt = `你在替 Bruce（周宗信）写一条要发给客户的微信。Bruce 是上海有色网（SMM）马来西亚办公室的镍、高镍生铁（NPI）、不锈钢分析师，二十多岁，马来西亚华人。他的目标是从客户那里拿到一手市场信息，并且和客户成为朋友。
+  const prompt = `你在替 Bruce（周宗信）写一条要发给客户的${platform}消息。Bruce 是上海有色网（SMM）马来西亚办公室的镍、高镍生铁（NPI）、不锈钢分析师，二十多岁，马来西亚华人。他的目标是从客户那里拿到一手市场信息，并且和客户成为朋友。
+
+【语言】
+${en ? "用英文写，照 Bruce 平时跟这位客户的英文口吻（看下面他说过的话和例句）。对方是印尼人可以称 Pak/Bu，偶尔夹一两个印尼语词也行。不要写中文，也不要用微信表情代码（比如 [捂脸]）。下面的资料和情报是中文，用到时翻成自然的英文。" : "用中文写。"}
 
 【Bruce 的说话习惯】
-${settings.data?.style_profile || DEFAULT_PROFILE}
+${profile}
 
 【Bruce 以前真的跟这位客户说过的话】（照着这个称呼、熟悉程度和语气写）
 ${(contact.my_samples ?? []).slice(-10).map((t: string) => "- " + t).join("\n") || "（暂无，按一般客户的熟悉程度写）"}
@@ -123,7 +136,7 @@ ${lines(theirs.data, (i) => `- ${i.date} [${i.category}] ${i.content}`)}
 ${lines(market.data, (i) => `- ${i.date} [${i.category}] ${i.content}`)}
 
 今天是 ${today()}。
-写 4 个不同角度的选项。每个选项是 Bruce 可以直接复制发出的微信：口语，像他本人；最多 3 短句，可以拆成两条消息（用换行分开）；不要编号、引号、解释；不要说出任何成交方、买卖方或信息来源的名字；不提公司内部资料。
+写 4 个不同角度的选项。每个选项是 Bruce 可以直接复制发出的${platform}消息：口语，像他本人；最多 3 短句，可以拆成两条消息（用换行分开）；不要编号、引号、解释；不要说出任何成交方、买卖方或信息来源的名字；不提公司内部资料。
 只回复 JSON：{"options":[{"label":"4到8个字说明这个角度","text":"消息内容"}]}`;
 
   try {
