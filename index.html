@@ -248,7 +248,7 @@ kbd { font: 500 11px var(--f-mono); color: var(--ink-3); border: 1px solid var(-
 .tli::before { content: ""; position: absolute; left: 6px; top: 14px; bottom: 0; width: 1px; background: var(--line); }
 .tli:last-child::before { display: none; }
 .tli .pt { width: 9px; height: 9px; border-radius: 50%; background: var(--tc, var(--ink-3)); margin-top: 6px; margin-left: 2px; }
-.tli .t { font-size: 14px; overflow-wrap: anywhere; }
+.tli .t { font-size: 14px; overflow-wrap: anywhere; white-space: pre-line; }
 .tli .meta { font-size: 12.5px; color: var(--ink-3); }
 
 /* composer (opener) */
@@ -291,6 +291,41 @@ form { display: grid; gap: 16px; }
 .hint { font-size: 13px; color: var(--ink-3); }
 .cad { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 14px; color: var(--ink-2); }
 .cad input { width: 60px; height: 36px; text-align: center; border: 0; border-radius: 10px; background: var(--side); }
+
+/* call transcription */
+.src { display: grid; gap: 8px; }
+.src button { display: grid; grid-template-columns: 40px minmax(0,1fr); gap: 14px; align-items: center; text-align: left; padding: 14px 16px; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line); transition: background .15s, box-shadow .15s; }
+.src button:hover { background: #fafafa; box-shadow: inset 0 0 0 1px var(--line-2); }
+.src .ic { width: 40px; height: 40px; border-radius: 12px; background: var(--side); display: grid; place-items: center; }
+.src .tx { display: grid; gap: 1px; min-width: 0; }
+.src .tx b { font-weight: 600; }
+.src .tx span { font-size: 13px; color: var(--ink-3); }
+.who-line { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.who-line b { font-weight: 600; }
+.rec { display: grid; justify-items: center; gap: 14px; padding: 30px 16px 24px; border-radius: 16px; background: var(--side); text-align: center; }
+.rec .live { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); font-weight: 500; }
+.rec .live::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--red); animation: blink 1.2s infinite; }
+@keyframes blink { 50% { opacity: .25; } }
+.rec .clock { font: 600 44px/1 var(--f-mono); letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.meter { width: min(240px, 100%); height: 6px; border-radius: 999px; background: var(--line-2); overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--ink); transform-origin: left; transform: scaleX(var(--lv, 0)); transition: transform .08s linear; }
+.prog { display: grid; gap: 12px; padding: 20px; border-radius: 16px; background: var(--side); }
+.prog .top { display: flex; justify-content: space-between; gap: 12px; font-weight: 500; }
+.bar { height: 6px; border-radius: 999px; background: var(--line-2); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 100%; background: var(--ink); transform-origin: left; transform: scaleX(var(--p, 0)); transition: transform .3s var(--ease); }
+.bar.indet i { width: 35%; transform: none; animation: slide 1.3s infinite var(--ease); }
+@keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(290%); } }
+.ilist { display: grid; gap: 8px; }
+.irow { display: grid; grid-template-columns: 20px minmax(0,1fr); gap: 12px; align-items: start; padding: 12px 14px; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line); transition: opacity .15s; }
+.irow input[type="checkbox"] { width: 18px; height: 18px; margin: 4px 0 0; accent-color: var(--ink); }
+.irow .ib { display: grid; gap: 6px; min-width: 0; }
+.irow .select { justify-self: start; height: 28px; font-size: 12.5px; padding-right: 26px; }
+.irow textarea { width: 100%; border: 0; background: none; resize: vertical; font-size: 14.5px; line-height: 1.6; padding: 0; outline: none; min-height: 48px; }
+.irow.off { opacity: .45; }
+details.raw > summary { cursor: pointer; font-size: 13px; color: var(--ink-2); font-weight: 500; list-style: none; display: inline-flex; align-items: center; gap: 6px; }
+details.raw > summary::-webkit-details-marker { display: none; }
+details.raw > summary:hover { color: var(--ink); }
+.trx { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 300px; overflow-y: auto; margin-top: 8px; padding: 12px 14px; border-radius: 12px; background: var(--side); font-size: 13.5px; line-height: 1.75; color: var(--ink-2); }
 
 /* palette */
 .pal-wrap { position: fixed; inset: 0; z-index: 50; display: grid; justify-items: center; align-items: start; padding: 12vh 16px 16px; background: rgba(0,0,0,.18); opacity: 0; transition: opacity .16s var(--ease); }
@@ -340,6 +375,8 @@ form { display: grid; gap: 16px; }
   <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></symbol>
   <symbol id="i-note" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></symbol>
   <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4L21 8"/><path d="M21 3v5h-5"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15V4M7 9l5-5 5 5"/><path d="M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></symbol>
 </svg>
 
 <div class="gate" id="gate-setup" hidden><div class="box"><div class="mark">N</div><h1>镍圈客户簿</h1><p class="hint">还没连上 Supabase。按 README 建好项目后，把 config.js 里的地址和公开 key 填上。</p></div></div>
@@ -359,6 +396,7 @@ form { display: grid; gap: 16px; }
   <aside class="side" aria-label="导航">
     <div class="brand"><span class="mark">N</span>镍圈客户簿</div>
     <button class="btn full" type="button" data-act="log"><svg class="i sm"><use href="#i-plus"/></svg>记一笔</button>
+    <button class="btn soft full" type="button" data-act="call"><svg class="i sm"><use href="#i-mic"/></svg>通话转录</button>
     <button class="search-open" type="button" data-act="palette"><svg class="i sm"><use href="#i-search"/></svg>搜索客户<kbd>⌘K</kbd></button>
     <nav class="nav">
       <button type="button" data-view="today" aria-current="page"><svg class="i"><use href="#i-sun"/></svg>今天<span class="count" id="n-today"></span></button>
@@ -451,10 +489,11 @@ function createSupabaseApi(){
   const chunks = (a, n) => Array.from({ length: Math.ceil(a.length / n) }, (_, i) => a.slice(i * n, i * n + n));
   const fn = async (name, body, signal) => {
     const s = (await sb.auth.getSession()).data.session;
+    const form = body instanceof FormData;
     const r = await fetch(cfg.supabaseUrl.replace(/\/$/, "") + "/functions/v1/" + name, {
       method: "POST", signal,
-      headers: { "Content-Type": "application/json", Authorization: "Bearer " + (s && s.access_token), apikey: cfg.supabaseAnonKey },
-      body: JSON.stringify(body),
+      headers: { ...(form ? {} : { "Content-Type": "application/json" }), Authorization: "Bearer " + (s && s.access_token), apikey: cfg.supabaseAnonKey },
+      body: form ? body : JSON.stringify(body),
     });
     const d = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(d.error || d.message || ("服务返回 " + r.status));
@@ -511,6 +550,8 @@ function createSupabaseApi(){
     async exportStyles(){ return must(await sb.from("style_examples").select("*").limit(5000)).map(camel); },
     async opener(contactId, mode, note, signal){ return fn("opener", { contactId, mode, note }, signal); },
     async agent(messages, signal){ return fn("agent", { messages }, signal); },
+    async transcribe(blob, name, meta, signal){ const f = new FormData(); f.append("file", blob, name); for (const k in meta) if (meta[k]) f.append(k, meta[k]); return fn("transcribe", f, signal); },
+    async callnote(contactId, transcript, date, signal){ return fn("callnote", { contactId, transcript, date }, signal); },
   };
 }
 </script>
@@ -783,7 +824,9 @@ function openSheet(title, html, state){
   $("drawer-body").scrollTop = 0;
   setTimeout(() => { const f = $("drawer-body").querySelector("[autofocus]") || $("drawer-close"); f && f.focus({preventScroll:true}); }, 60);
 }
-function closeSheet(){
+const recording = () => !!(S.sheet && S.sheet.type === "call" && S.sheet.phase === "rec");
+function closeSheet(force){
+  if (!force && recording()) { toast("正在录音，先点「停止」或「放弃」"); return; }
   if (S.sheet && S.sheet.ctl) S.sheet.ctl.abort();
   S.sheet = null;
   const d = $("drawer"), sc = $("scrim");
@@ -791,7 +834,7 @@ function closeSheet(){
   closeT = setTimeout(() => { d.hidden = true; sc.hidden = true; }, 260);
   lastFocus && lastFocus.focus && lastFocus.focus({preventScroll:true});
 }
-$("drawer-close").onclick = closeSheet; $("scrim").onclick = closeSheet;
+$("drawer-close").onclick = () => closeSheet(); $("scrim").onclick = () => closeSheet();
 
 /* ---------- detail ---------- */
 function openDetail(id){ const c = byId(id); if (!c) return; openSheet(c.name, "", {type:"detail", id}); renderDetail(id); }
@@ -799,18 +842,18 @@ function renderDetail(id){
   const c = byId(id); if (!c) { closeSheet(); return; }
   const kv = [["他能给我的", c.gives], ["他想要的", c.wants], ["沟通提醒", c.issues], ["互动特点", c.dynamics], ["导入时的情报", c.highlights], ["电话", c.phone]]
     .filter(([,v]) => v && v !== "无").map(([k,v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("");
-  const tl = [...logsOf(id).map(l => ({d:l.date, c:"var(--ink)", k:(l.channel||"记录"), t:[l.summary, l.next ? "下次：" + l.next : ""].filter(Boolean).join(" · ")})),
+  const tl = [...logsOf(id).map(l => ({d:l.date, c:"var(--ink)", k:(l.channel||"记录"), t:[l.summary, l.next ? "下次：" + l.next : ""].filter(Boolean).join(" · "), tr:l.transcript || ""})),
               ...intelOf(id).map(i => ({d:i.date, c:CAT_C[i.category] || "var(--ink-3)", k:"情报 · " + (i.category||""), t:i.content}))].sort((a,b) => String(b.d).localeCompare(String(a.d)));
   const st = c.stats || {}, m = suggestMode(c);
   $("drawer-title").textContent = "";
   $("drawer-body").innerHTML = `
     <div class="prof">${av(c, 1)}<div style="min-width:0"><h2>${esc(c.name)} ${tierB(c.tier)}</h2><div class="sub">${esc(c.company || "公司未填")}${c.role ? " · " + esc(c.role) : ""}</div></div></div>
     <div class="facts">${stageP(c)}<span class="tag" style="--tc:var(--ink-3)">${esc(c.relation || "")}</span><span class="tag" style="--tc:var(--ink-3)">${esc(c.segment || "")}</span><span class="muted" style="font-size:12.5px">上次聊 ${ago(lastTouch(c))}</span>${dueTxt(c)}</div>
-    <div class="acts"><button class="btn" type="button" data-compose="${esc(id)}" data-mode="${esc(m)}">${ico("pen","sm")}写开场白</button><button class="btn soft" type="button" data-log="${esc(id)}">记一笔</button><button class="btn soft" type="button" data-touch="${esc(id)}">${ico("check","sm")}聊过了</button><button class="btn ghost" type="button" data-edit="${esc(id)}">编辑</button></div>
+    <div class="acts"><button class="btn" type="button" data-compose="${esc(id)}" data-mode="${esc(m)}">${ico("pen","sm")}写开场白</button><button class="btn soft" type="button" data-log="${esc(id)}">记一笔</button><button class="btn soft" type="button" data-call="${esc(id)}">${ico("mic","sm")}通话转录</button><button class="btn soft" type="button" data-touch="${esc(id)}">${ico("check","sm")}聊过了</button><button class="btn ghost" type="button" data-edit="${esc(id)}">编辑</button></div>
     ${nextText(c) ? `<div class="card"><span class="lbl">下一步</span><div>${esc(nextText(c))}</div></div>` : ""}
     ${kv ? `<div class="block"><span class="lbl">资料</span><dl class="kv">${kv}</dl></div>` : ""}
     ${(c.mySamples||[]).length ? `<div class="block"><span class="lbl">你以前跟他这么聊</span><div class="quote">${c.mySamples.slice(-6).map(esc).join("<br>")}</div></div>` : ""}
-    <div class="block"><span class="lbl">往来</span>${tl.length ? `<div class="tl">${tl.map(x => `<div class="tli" style="--tc:${x.c}"><span class="pt"></span><div><div class="t">${esc(x.t)}</div><div class="meta">${esc(day10(x.d))} · ${esc(x.k)}</div></div></div>`).join("")}</div>` : `<p class="hint">还没有记录。聊完点「记一笔」，下次就能在这里看到。</p>`}</div>
+    <div class="block"><span class="lbl">往来</span>${tl.length ? `<div class="tl">${tl.map(x => `<div class="tli" style="--tc:${x.c}"><span class="pt"></span><div style="min-width:0"><div class="t">${esc(x.t)}</div><div class="meta">${esc(day10(x.d))} · ${esc(x.k)}</div>${x.tr ? `<details class="raw"><summary>${ico("note","sm")}通话原文 · ${x.tr.length} 字</summary><div class="trx">${esc(x.tr)}</div></details>` : ""}</div></div>`).join("")}</div>` : `<p class="hint">还没有记录。聊完点「记一笔」，下次就能在这里看到。</p>`}</div>
     ${st.first ? `<p class="hint">微信导出：我发 ${st.me||0} · 他发 ${st.them||0} · 群发 ${st.mass||0} · 通话 ${st.calls||0} · 首次 ${esc(st.first)}</p>` : ""}`;
 }
 
@@ -876,6 +919,7 @@ function openLog(id, back){
   openSheet(c ? "记一笔 · " + c.name : "记一笔", `
     <form id="f-log" novalidate>
       <div class="field"><label for="lg-c">客户</label><select id="lg-c" name="contact" ${c ? "" : "autofocus"}><option value="">选择客户…</option>${contactOptions()}</select></div>
+      <div><button class="btn line sm" type="button" id="lg-call">${ico("mic","sm")}刚打完电话？录音转成记录</button></div>
       <div class="frow">
         <div class="field"><span class="lb">方式</span><div class="radio">${CHANNELS.map((ch,k) => `<input type="radio" name="channel" id="lg-ch-${k}" value="${ch}"${k===0?" checked":""}><label for="lg-ch-${k}">${ch}</label>`).join("")}</div></div>
         <div class="field"><label for="lg-d">日期</label><input type="date" id="lg-d" name="date" value="${today()}" max="${today()}"></div>
@@ -892,6 +936,7 @@ function openLog(id, back){
     </form>`, {type:"form"});
   if (c) $("lg-c").value = c.id;
   $("lg-cancel").onclick = () => back ? openDetail(back) : closeSheet();
+  $("lg-call").onclick = () => openCall($("lg-c").value);
   $("f-log").onsubmit = async e => {
     e.preventDefault();
     const fd = new FormData(e.target), cid = String(fd.get("contact")||""), summary = String(fd.get("summary")||"").trim(), intel = String(fd.get("intel")||"").trim(), err = $("lg-err");
@@ -906,7 +951,7 @@ function openLog(id, back){
 }
 async function saveLog(r){
   const c = byId(r.contactId);
-  await API.addLog({contactId:r.contactId, contactName:c.name, channel:r.channel, date:r.date, summary:r.summary, next:r.next||"", nextDate:r.nextDate||null});
+  await API.addLog({contactId:r.contactId, contactName:c.name, channel:r.channel, date:r.date, summary:r.summary, next:r.next||"", nextDate:r.nextDate||null, transcript:r.transcript||undefined});
   if (r.intel) await API.addIntel({contactId:r.contactId, contactName:c.name, date:r.date, category:r.category||"其他", content:r.intel, source:"记录"});
   const patch = {updatedAt: new Date().toISOString()};
   if (!lastTouch(c) || r.date > day10(lastTouch(c))) patch.lastTouch = r.date;
@@ -970,6 +1015,259 @@ function openEdit(id){
   };
 }
 
+/* ---------- 通话转录 ---------- */
+// 录音或上传 → 切成 5 分钟一段逐段转文字 → AI 整理要点、情报、下次跟进 → 改完再存。音频不上传到数据库，只存转写原文。
+const SEG = (window.CRM_TEST_API && window.CRM_TEST_API.seg) || 300;
+const MAX_UP = 24 * 1024 * 1024;
+const OK_EXT = /\.(mp3|m4a|mp4|mpeg|mpga|wav|webm|ogg|oga|flac)$/i;
+const mmss = s => pad(Math.floor(s / 60)) + ":" + pad(Math.floor(s % 60));
+function openCall(id){
+  const st = {type:"call", id:id || "", phase:"pick", date:today(), parts:[], texts:[], transcript:"", note:null, error:"", step:"", prog:0, ctl:null, rec:null};
+  openSheet("通话转录", "", st); renderCall();
+}
+function renderCall(){
+  const st = S.sheet; if (!st || st.type !== "call") return;
+  const c = byId(st.id), body = $("drawer-body");
+  const who = c ? `<div class="who-line">${av(c)}<div style="min-width:0"><b>${esc(c.name)}</b> <span class="muted">${esc(c.company || "")}</span></div></div>` : "";
+  const err = st.error ? `<p class="err">${esc(st.error)}</p>` : "";
+  $("drawer-title").textContent = c ? "通话转录 · " + c.name : "通话转录";
+  if (st.phase === "pick") {
+    body.innerHTML = `
+      <div class="field"><label for="cl-c">跟谁通话</label><select id="cl-c"><option value="">选择客户…</option>${contactOptions()}</select></div>
+      <div class="src">
+        <button type="button" data-src="rec"><span class="ic">${ico("mic")}</span><span class="tx"><b>现在录音</b><span>手机开免提放在电脑旁边录，或者打完马上口述要点</span></span></button>
+        <button type="button" data-src="file"><span class="ic">${ico("upload")}</span><span class="tx"><b>上传录音</b><span>手机通话录音、语音备忘录，m4a、mp3、wav 都行，多长都可以</span></span></button>
+        <button type="button" data-src="text"><span class="ic">${ico("note")}</span><span class="tx"><b>粘贴文字</b><span>已经有转写稿了，直接整理</span></span></button>
+      </div>
+      <input type="file" id="cl-file" accept="audio/*,.m4a,.mp3,.wav,.aac,.ogg,.webm,.mp4,.flac" hidden>
+      ${err}
+      <p class="hint">录通话前先跟对方打声招呼。音频只用来转文字，不会保存；转写和整理会经过 OpenAI。</p>`;
+    $("cl-c").value = st.id;
+    $("cl-c").onchange = e => { st.id = e.target.value; st.error = ""; renderCall(); };
+    body.querySelectorAll("[data-src]").forEach(b => b.onclick = () => {
+      if (!st.id) { st.error = "先选是跟谁通话。"; renderCall(); $("cl-c").focus(); return; }
+      const k = b.dataset.src;
+      if (k === "rec") return startRec(st);
+      if (k === "file") return $("cl-file").click();
+      st.phase = "paste"; st.error = ""; renderCall();
+    });
+    $("cl-file").onchange = e => { const f = e.target.files && e.target.files[0]; if (f) useFile(st, f); };
+  } else if (st.phase === "rec") {
+    body.innerHTML = `${who}
+      <div class="rec"><span class="live">正在录音</span><div class="clock" id="cl-clock">${mmss((Date.now() - st.rec.t0) / 1000)}</div><div class="meter" aria-hidden="true"><i id="cl-lv"></i></div>
+        <p class="hint">录音时别关这个窗口，也别锁屏。说完点停止，会自动转成文字。</p></div>
+      <div class="acts" style="justify-content:center"><button class="btn" type="button" id="cl-stop">${ico("stop","sm")}停止，转成文字</button><button class="btn ghost" type="button" id="cl-drop">放弃</button></div>`;
+    $("cl-stop").onclick = () => stopRec(st);
+    $("cl-drop").onclick = () => { endRec(st.rec); st.rec = null; st.phase = "pick"; renderCall(); };
+  } else if (st.phase === "work") {
+    const indet = st.prog < 0;
+    body.innerHTML = `${who}
+      <div class="prog" role="status"><div class="top"><span>${esc(st.step)}</span>${indet ? "" : `<span class="muted mono">${Math.round(st.prog * 100)}%</span>`}</div>
+        <div class="bar${indet ? " indet" : ""}"><i style="--p:${Math.max(.02, st.prog)}"></i></div>
+        ${indet ? "" : `<p class="hint">${st.parts.length > 1 ? `录音切成了 ${st.parts.length} 段，一段一段转。` : ""}10 分钟的电话大概要一分钟。</p>`}</div>
+      ${st.reading ? "" : `<div class="acts"><button class="btn ghost" type="button" id="cl-halt">停止</button></div>`}`;
+    if (st.reading) return;
+    $("cl-halt").onclick =() => { st.ctl && st.ctl.abort(); st.phase = "failed"; st.error = "已停止。点「继续」从停下的地方接着转。"; renderCall(); };
+  } else if (st.phase === "failed") {
+    const part = st.texts.filter(Boolean).join("\n");
+    body.innerHTML = `${who}${err}
+      <div class="acts"><button class="btn" type="button" id="cl-retry">${ico("refresh","sm")}继续</button><button class="btn ghost" type="button" id="cl-back">重新选</button></div>
+      ${part ? `<details class="raw"><summary>${ico("note","sm")}已经转好的 ${st.texts.length} / ${st.parts.length} 段</summary><div class="trx">${esc(part)}</div></details>` : ""}`;
+    $("cl-retry").onclick = () => runCall(st);
+    $("cl-back").onclick = () => { st.phase = "pick"; st.error = ""; st.parts = []; st.texts = []; renderCall(); };
+  } else if (st.phase === "paste") {
+    body.innerHTML = `${who}
+      <div class="field"><label for="cl-paste">转写文字</label><textarea id="cl-paste" style="min-height:280px" placeholder="把通话的文字稿贴在这里" autofocus>${esc(st.transcript)}</textarea></div>
+      ${err}
+      <div class="formfoot"><button class="btn ghost" type="button" id="cl-back">返回</button><button class="btn" type="button" id="cl-go">${ico("spark","sm")}整理要点</button></div>`;
+    $("cl-back").onclick = () => { st.phase = "pick"; st.error = ""; renderCall(); };
+    $("cl-go").onclick = () => {
+      const t = $("cl-paste").value.trim();
+      if (!t) { st.error = "先贴上文字。"; renderCall(); return; }
+      st.transcript = t; summarizeCall(st);
+    };
+  } else if (st.phase === "review") {
+    const n = st.note;
+    body.innerHTML = `
+      <form id="f-call" novalidate>
+        <div class="frow"><div class="field"><label for="cr-c">客户</label><select id="cr-c" name="contact"><option value="">选择客户…</option>${contactOptions()}</select></div>
+          <div class="field"><label for="cr-d">日期</label><input type="date" id="cr-d" name="date" value="${esc(st.date)}" max="${today()}"></div></div>
+        ${st.error ? `<div class="card" style="padding:12px 14px">${err}<div><button class="btn soft sm" type="button" data-redo>${ico("refresh","sm")}重新整理</button></div></div>` : ""}
+        <div class="field"><label for="cr-s">要点</label><textarea id="cr-s" name="summary" style="min-height:150px" placeholder="这通电话聊了什么">${esc(n.points)}</textarea></div>
+        <div class="block"><span class="lbl">拿到的情报 · 勾上的会进情报库</span>
+          ${n.intel.length ? `<div class="ilist">${n.intel.map((it, k) => `<div class="irow${it.on ? "" : " off"}"><input type="checkbox" data-k="${k}"${it.on ? " checked" : ""} aria-label="收进情报库">
+            <div class="ib"><select class="select" data-cat="${k}" aria-label="品类">${CATS.map(x => `<option${x === it.category ? " selected" : ""}>${esc(x)}</option>`).join("")}</select><textarea rows="2" data-txt="${k}" aria-label="情报内容">${esc(it.content)}</textarea></div></div>`).join("")}</div>`
+            : `<p class="hint">这通电话里没听出价格、成交这类情报。</p>`}</div>
+        <div class="frow"><div class="field"><label for="cr-n">下次跟进什么</label><input type="text" id="cr-n" name="next" value="${esc(n.next)}" placeholder="比如：下周三问 12 月排产"></div>
+          <div class="field"><label for="cr-nd">哪天跟进（不填按节奏）</label><input type="date" id="cr-nd" name="nextDate" value="${esc(n.nextDate)}" min="${today()}"></div></div>
+        <details class="raw"><summary>${ico("note","sm")}通话原文 · ${st.transcript.length} 字</summary>
+          <div class="field" style="margin-top:8px"><textarea id="cr-t" name="transcript" style="min-height:240px" aria-label="通话原文">${esc(st.transcript)}</textarea></div>
+          <div style="margin-top:8px"><button class="btn soft sm" type="button" data-redo>${ico("refresh","sm")}按改过的原文重新整理</button></div></details>
+        <p class="err" id="cr-err" hidden></p>
+        <div class="formfoot"><button class="btn ghost" type="button" id="cr-cancel">取消</button><button class="btn" type="submit" id="cr-save">保存</button></div>
+      </form>`;
+    $("cr-c").value = st.id;
+    $("cr-c").onchange = e => { st.id = e.target.value; };
+    body.querySelectorAll("[data-k]").forEach(x => x.onchange = () => { n.intel[+x.dataset.k].on = x.checked; x.closest(".irow").classList.toggle("off", !x.checked); });
+    body.querySelectorAll("[data-redo]").forEach(b => b.onclick = () => { readReview(st); summarizeCall(st); });
+    $("cr-cancel").onclick = () => closeSheet();
+    $("f-call").onsubmit = e => { e.preventDefault(); saveCall(st); };
+  }
+}
+function readReview(st){
+  const n = st.note, v = id => ($(id) || {}).value;
+  st.id = v("cr-c") ?? st.id; st.date = v("cr-d") || st.date; st.transcript = (v("cr-t") ?? st.transcript).trim();
+  n.points = v("cr-s") ?? n.points; n.next = v("cr-n") ?? n.next; n.nextDate = v("cr-nd") ?? n.nextDate;
+  n.intel.forEach((it, k) => { const cat = document.querySelector(`[data-cat="${k}"]`), txt = document.querySelector(`[data-txt="${k}"]`); if (cat) it.category = cat.value; if (txt) it.content = txt.value; });
+}
+
+/* 录音：每 5 分钟换一个 MediaRecorder，每段都是能单独转写的完整文件 */
+async function startRec(st){
+  st.error = "";
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) { st.error = "这个浏览器不能录音。换 Chrome 或 Safari，或者用手机录好再上传。"; renderCall(); return; }
+  let actx = null; try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) {} // 在点击里建，Safari 才不会把它挂起
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({audio:true}); }
+  catch (e) { if (actx) actx.close().catch(() => {}); st.error = /NotAllowed|Permission/i.test(e && e.name || "") ? "没拿到麦克风权限。在浏览器里允许这个网站用麦克风，再点一次。" : "打不开麦克风：" + errText(e); renderCall(); return; }
+  if (S.sheet !== st) { stream.getTracks().forEach(t => t.stop()); if (actx) actx.close().catch(() => {}); return; }
+  const mime = ["audio/webm;codecs=opus", "audio/mp4", "audio/webm", "audio/ogg;codecs=opus"].find(m => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) || "";
+  const R = {stream, actx, ext: /mp4/.test(mime) ? "mp4" : /ogg/.test(mime) ? "ogg" : "webm", t0: Date.now(), k: 0, blobs: [], pending: [], mr: null};
+  const piece = () => {
+    const k = R.k++, chunks = [], mr = new MediaRecorder(stream, mime ? {mimeType: mime, audioBitsPerSecond: 32000} : undefined);
+    mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+    R.pending.push(new Promise(res => { mr.onstop = () => { if (chunks.length) R.blobs[k] = new Blob(chunks, {type: mr.mimeType || mime || "audio/webm"}); res(); }; }));
+    mr.start();
+    return mr;
+  };
+  R.mr = piece();
+  R.rot = setInterval(() => { const old = R.mr; R.mr = piece(); old.stop(); }, SEG * 1000);
+  R.tick = setInterval(() => { const el = $("cl-clock"); if (el) el.textContent = mmss((Date.now() - R.t0) / 1000); }, 500);
+  try {
+    const an = R.actx.createAnalyser(), buf = new Uint8Array(512); an.fftSize = 512;
+    R.actx.createMediaStreamSource(stream).connect(an);
+    const loop = () => { an.getByteTimeDomainData(buf); let s = 0; for (const x of buf) s += ((x - 128) / 128) ** 2; const el = $("cl-lv"); if (el) el.style.setProperty("--lv", Math.min(1, Math.sqrt(s / buf.length) * 5).toFixed(3)); R.raf = requestAnimationFrame(loop); };
+    loop();
+  } catch (_) {}
+  try { R.wake = await navigator.wakeLock.request("screen"); } catch (_) {}
+  st.ctl = new AbortController(); st.ctl.signal.addEventListener("abort", () => endRec(R));
+  st.rec = R; st.parts = []; st.texts = []; st.transcript = ""; st.phase = "rec"; renderCall();
+}
+function endRec(R){
+  if (!R || R.ended) return; R.ended = true;
+  clearInterval(R.rot); clearInterval(R.tick); cancelAnimationFrame(R.raf);
+  try { if (R.mr && R.mr.state !== "inactive") R.mr.stop(); } catch (_) {}
+  R.stream.getTracks().forEach(t => t.stop());
+  if (R.actx) R.actx.close().catch(() => {});
+  if (R.wake) R.wake.release().catch(() => {});
+}
+async function stopRec(st){
+  const R = st.rec; if (!R) return;
+  $("cl-stop").disabled = true;
+  endRec(R); await Promise.all(R.pending);
+  st.rec = null;
+  st.parts = R.blobs.filter(Boolean).map((b, k) => ({blob: b, name: `part${k + 1}.${R.ext}`}));
+  if (!st.parts.length) { st.phase = "pick"; st.error = "没录到声音，再试一次。"; renderCall(); return; }
+  runCall(st);
+}
+
+/* 上传：短的直接传；长的或格式不认的，先解码成 16kHz 单声道，再切成 5 分钟一段 WAV */
+function audioDuration(file){
+  return new Promise(res => {
+    const a = document.createElement("audio"), url = URL.createObjectURL(file);
+    const done = v => { clearTimeout(t); URL.revokeObjectURL(url); res(v); };
+    const t = setTimeout(() => done(NaN), 8000);
+    a.preload = "metadata"; a.onloadedmetadata = () => done(a.duration); a.onerror = () => done(NaN); a.src = url;
+  });
+}
+function toMono16k(audio){
+  const n = audio.length, ch = audio.numberOfChannels, mono = new Float32Array(n);
+  for (let c = 0; c < ch; c++) { const d = audio.getChannelData(c); for (let i = 0; i < n; i++) mono[i] += d[i] / ch; }
+  if (audio.sampleRate === 16000) return mono;
+  const r = audio.sampleRate / 16000, out = new Float32Array(Math.floor(n / r));
+  for (let i = 0; i < out.length; i++) { const a = Math.floor(i * r), b = Math.min(n, Math.max(a + 1, Math.floor((i + 1) * r))); let s = 0; for (let j = a; j < b; j++) s += mono[j]; out[i] = s / (b - a); }
+  return out;
+}
+function wav(pcm, rate){
+  const v = new DataView(new ArrayBuffer(44 + pcm.length * 2)), w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, "RIFF"); v.setUint32(4, 36 + pcm.length * 2, true); w(8, "WAVE"); w(12, "fmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, "data"); v.setUint32(40, pcm.length * 2, true);
+  for (let i = 0, o = 44; i < pcm.length; i++, o += 2) { const s = Math.max(-1, Math.min(1, pcm[i])); v.setInt16(o, s < 0 ? s * 0x8000 : s * 0x7fff, true); }
+  return new Blob([v.buffer], {type: "audio/wav"});
+}
+async function splitAudio(file){
+  const name = file.name || "audio", direct = file.size <= MAX_UP && OK_EXT.test(name);
+  const dur = await audioDuration(file);
+  if (direct && dur > 0 && dur <= SEG * 1.2) return [{blob: file, name}];
+  let audio;
+  try {
+    let ctx; try { ctx = new OfflineAudioContext(1, 1, 16000); } catch (_) { ctx = new OfflineAudioContext(1, 1, 44100); }
+    audio = await ctx.decodeAudioData(await file.arrayBuffer());
+  } catch (_) {
+    if (direct) return [{blob: file, name}];
+    throw new Error("这个录音格式读不了，先在手机上转成 m4a 或 mp3 再传。");
+  }
+  if (direct && audio.duration <= SEG * 1.2) return [{blob: file, name}];
+  const pcm = toMono16k(audio), per = SEG * 16000, parts = [];
+  for (let i = 0; i < pcm.length; ) {
+    const end = pcm.length - (i + per) < per * 0.1 ? pcm.length : i + per; // 最后剩一小截就并进这一段
+    parts.push({blob: wav(pcm.subarray(i, end), 16000), name: `part${parts.length + 1}.wav`}); i = end;
+  }
+  return parts;
+}
+async function useFile(st, file){
+  st.error = ""; st.phase = "work"; st.step = "读取录音…"; st.prog = -1; st.parts = []; st.texts = []; st.transcript = ""; st.reading = true; renderCall();
+  try { const parts = await splitAudio(file); st.reading = false; if (S.sheet !== st) return; st.parts = parts; runCall(st); }
+  catch (e) { st.reading = false; if (S.sheet !== st) return; st.phase = "pick"; st.error = errText(e); renderCall(); }
+}
+
+/* 逐段转文字（从停下的那段接着转），再整理 */
+async function runCall(st){
+  const ctl = new AbortController(); st.ctl = ctl; st.error = ""; st.phase = "work";
+  const c = byId(st.id);
+  try {
+    if (st.parts.length) {
+      for (let k = st.texts.length; k < st.parts.length; k++) {
+        st.step = st.parts.length > 1 ? `转成文字 · 第 ${k + 1} / ${st.parts.length} 段` : "转成文字…"; st.prog = k / st.parts.length; renderCall();
+        const p = st.parts[k];
+        const r = await API.transcribe(p.blob, p.name, {contact: c ? c.name : "", prev: st.texts.join("").slice(-200)}, ctl.signal);
+        st.texts.push(String(r.text || "").trim());
+      }
+      st.transcript = st.texts.filter(Boolean).join("\n");
+    }
+    if (!st.transcript) { st.phase = "pick"; st.parts = []; st.texts = []; st.error = "没听出说话的内容，检查一下录音有没有声音。"; renderCall(); return; }
+    await summarizeCall(st, ctl);
+  } catch (e) {
+    if (e && e.name === "AbortError") return;
+    st.error = "转文字失败：" + errText(e); st.phase = "failed"; if (S.sheet === st) renderCall();
+  }
+}
+async function summarizeCall(st, ctl){
+  if (!ctl) { ctl = new AbortController(); st.ctl = ctl; }
+  st.phase = "work"; st.step = "整理要点和情报…"; st.prog = -1; st.error = ""; renderCall();
+  try {
+    const r = await API.callnote(st.id, st.transcript, st.date, ctl.signal);
+    st.note = {points: (r.points || []).join("\n"), intel: (r.intel || []).map(i => ({...i, on: true})), next: r.next || "", nextDate: r.nextDate || ""};
+  } catch (e) {
+    if (e && e.name === "AbortError") return;
+    st.note = st.note || {points: "", intel: [], next: "", nextDate: ""};
+    st.error = "要点没整理出来：" + errText(e) + " 原文已经转好，可以重新整理，也可以直接保存。";
+  }
+  st.phase = "review"; if (S.sheet === st) renderCall();
+}
+async function saveCall(st){
+  readReview(st);
+  const n = st.note, err = $("cr-err"), c = byId(st.id);
+  if (!c) { err.textContent = "先选一位客户。"; err.hidden = false; return; }
+  const summary = n.points.trim() || "通话（要点见原文）", picked = n.intel.filter(i => i.on && i.content.trim());
+  $("cr-save").disabled = true;
+  try {
+    await saveLog({contactId: c.id, channel: "电话", date: st.date, summary, next: n.next.trim(), nextDate: n.nextDate, transcript: st.transcript});
+    for (const i of picked) await API.addIntel({contactId: c.id, contactName: c.name, date: st.date, category: i.category, content: i.content.trim(), source: "通话转录"});
+    toast(picked.length ? `记下了，${picked.length} 条情报进了情报库` : "记下了");
+    await refresh(); openDetail(c.id);
+  } catch (x) { err.textContent = errText(x); err.hidden = false; $("cr-save").disabled = false; }
+}
+
 /* ---------- settings ---------- */
 function openSettings(){
   openSheet("设置", `
@@ -1020,6 +1318,7 @@ const ACTIONS = [
   {k:"log", t:"记一笔", s:"记下刚聊完的事", i:"note"},
   {k:"ask", t:"问参谋", s:"今天找谁、谁能给什么", i:"spark"},
   {k:"new-contact", t:"新客户", s:"加一位客户", i:"plus"},
+  {k:"call", t:"通话转录", s:"录音或上传，转成记录和情报", i:"mic"},
   {k:"new-intel", t:"记一条情报", s:"价格、成交、政策", i:"pulse"},
   {k:"settings", t:"设置", s:"节奏、说话习惯、导入", i:"gear"},
 ];
@@ -1062,6 +1361,7 @@ $("pal-q").addEventListener("keydown", e => {
 $("pal").addEventListener("click", e => { if (e.target === $("pal")) closePalette(); });
 function doAct(k){
   if (k === "log") return openLog(null);
+  if (k === "call") return openCall(null);
   if (k === "ask") return setView("ask");
   if (k === "new-contact") return openEdit(null);
   if (k === "new-intel") return openIntel();
@@ -1071,17 +1371,18 @@ function doAct(k){
 
 /* ---------- keyboard ---------- */
 document.addEventListener("keydown", e => {
-  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); $("pal").hidden ? openPalette() : closePalette(); return; }
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); if (recording()) return; $("pal").hidden ? openPalette() : closePalette(); return; }
   if (e.key === "Escape") { if (!$("pal").hidden) { closePalette(); return; } if (S.sheet) closeSheet(); return; }
   if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches('.item[role="button"]')) { e.preventDefault(); openDetail(e.target.dataset.open); }
 });
 
 /* ---------- delegated clicks ---------- */
 document.addEventListener("click", async e => {
-  const t = e.target.closest("[data-compose],[data-log],[data-touch],[data-edit],[data-act],[data-q],[data-mode-pick],[data-copy-opt],[data-edit-opt],[data-sent-opt],[data-pal],[data-open]"); if (!t) return;
+  const t = e.target.closest("[data-compose],[data-log],[data-call],[data-touch],[data-edit],[data-act],[data-q],[data-mode-pick],[data-copy-opt],[data-edit-opt],[data-sent-opt],[data-pal],[data-open]"); if (!t) return;
   const d = t.dataset;
   if (d.pal !== undefined) return pickPalette(+d.pal);
   if (d.compose) return openCompose(d.compose, d.mode);
+  if (d.call !== undefined) return openCall(d.call);
   if (d.log) return openLog(d.log, S.sheet && S.sheet.type === "detail" ? d.log : null);
   if (d.touch) { t.disabled = true; await touchToday(d.touch); t.disabled = false; return; }
   if (d.edit) return openEdit(d.edit);
@@ -1122,7 +1423,7 @@ $("f-auth").onsubmit = async e => {
 function showGate(which){ $("gate-setup").hidden = which !== "setup"; $("gate-auth").hidden = which !== "auth"; $("app").hidden = which !== "app"; }
 async function onSession(s){
   S.user = s ? s.user : null;
-  if (!s) { S.loaded = false; S.contacts = new Map(); S.logs = []; S.intel = []; if (S.sheet) closeSheet(); showGate("auth"); return; }
+  if (!s) { S.loaded = false; S.contacts = new Map(); S.logs = []; S.intel = []; if (S.sheet) closeSheet(true); showGate("auth"); return; }
   showGate("app"); renderCounts(); await refresh();
 }
 
