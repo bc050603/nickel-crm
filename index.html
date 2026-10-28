@@ -964,10 +964,12 @@ async function sentOption(k){
 /* ---------- forms ---------- */
 function contactOptions(){ return [...S.contacts.values()].sort((a,b) => (TIERS.indexOf(a.tier) - TIERS.indexOf(b.tier)) || a.name.localeCompare(b.name, "zh")).map(c => `<option value="${esc(c.id)}">${esc(c.tier)} · ${esc(c.name)}${c.company ? "｜" + esc(c.company) : ""}</option>`).join(""); }
 // LinkedIn：链接和头衔记在 stats.linkedin（对照 LinkedIn 好友时补上的）；“很可能”是按名字和公司推断的，没百分百确认
+// 没拿到主页地址的人记的是 LinkedIn 搜索链接，点开要在结果里选本人
 function linkedinRow(c){
   const li = c.stats && c.stats.linkedin;
   if (!li || !/^https:\/\/(www\.)?linkedin\.com\//.test(li.url || "")) return "";
-  const note = li.match && li.match !== "确定" ? `<span class="muted"> · ${esc(li.match)}是同一人</span>` : "";
+  const note = (li.match && li.match !== "确定" ? `<span class="muted"> · ${esc(li.match)}是同一人</span>` : "")
+    + (li.url.includes("/search/") ? `<span class="muted"> · 搜索链接，点开选本人</span>` : "");
   return `<dt>LinkedIn</dt><dd><a href="${esc(li.url)}" target="_blank" rel="noopener">${esc(li.headline || li.name || "打开主页")}</a>${note}</dd>`;
 }
 function sel(name, opts, val, id){ return `<select id="${id}" name="${name}">${opts.map(o => `<option${o===val?" selected":""}>${esc(o)}</option>`).join("")}</select>`; }
