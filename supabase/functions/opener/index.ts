@@ -23,6 +23,18 @@ const MODES: Record<string, string> = {
 const SHAREABLE = ["NPI/镍铁", "不锈钢", "纯镍/LME", "印尼政策/矿", "MHP/高冰/新能源", "废钢/铬", "海外/贸易"];
 const DEFAULT_PROFILE = "短句、口语，常带“呀、哈、嘛、啦、滴”这类语气词，常用“好滴、嗯嗯、确实、哈哈哈”；称呼X总，熟的叫哥、姐；偶尔一个表情如[捂脸][抱拳]；绝不用客服腔。";
 const DEFAULT_PROFILE_EN = "英文（WhatsApp）：很短，一条中位数 5 个词，一件事拆几条发，句尾大多不加标点；开场 “Morning Pak X” “Hey X!” “Hi Mr X, Bruce here”；常用 alright、yup、sure、noted、no worries、btw、tho、haha、bro；问价先说听到的 “I heard … at …”；表情很少，常用 🤣 😭 🙏；不用 Dear、Kindly、Regards 这种邮件腔。";
+// LinkedIn 私信：分析师找同行交流，不是销售。没聊过的才自我介绍，发过介绍没回的写跟进
+const LINKEDIN = `【渠道：LinkedIn 私信】（这一段优先于下面的「这次的目的」）
+Bruce 在 LinkedIn 上是以分析师的身份找同行交流，不是销售。先看【最近和他的记录】，分三种情况写：
+- 对方已经在 LinkedIn 上回过话、聊开了：接着他上次说的写，可以按「这次的目的」问问题，口吻还是同行之间。
+- 对方发来的消息 Bruce 一直没回：先接住他那条，简单说声抱歉，不要编理由（比如出差、太忙），这一条不带市场信息、也不问价。
+- Bruce 发过介绍或首条私信、对方没回：不要再自我介绍，写一条简短的跟进，找一个跟他工作相关的由头，问一句他的看法。
+- 从没聊过：三句左右。先说自己是谁、研究什么（SMM 驻吉隆坡的镍和不锈钢分析师；从印尼镍矿、NPI、MHP 和高冰镍这类中间品、中国不锈钢、镍铁流向中国和印度、欧盟 CBAM 里挑跟对方相关的说）；再说为什么想听他的看法（他在产业链上的位置看得到 Bruce 研究需要的东西）；最后轻轻一句同行之间的邀请，比如 compare notes、swap views、stay in touch。
+不要拿市场信息开场（价格、减产传闻、"we're hearing…"）；不要提供服务（帮他采购、介绍买家、分享 SMM 的数据或成本、带他看 SMM 怎么评估价格）；不要把 SMM 的价格说成合同参考价；不要编 Bruce 的经历、行程或理由。对方是记者的，可以说 "happy to chat if an analyst's view is useful"。
+写成一段，不拆条；不用 Dear、Regards，不用表情，不用 bro、haha、tho 这种 WhatsApp 口头禅。
+“下次跟进”里如果有现成的英文草稿，可以沿用它的角度，按上面的规则写得更自然；如果写着还在等对方通过好友邀请，就写通过后的第一条。4 个选项挑不同的研究方向或对方不同的视角来写。
+`;
+const LINKEDIN_PROFILE = "LinkedIn 上比微信、WhatsApp 正式一点，但要像一个人在说话，不像群发：句子完整，语气友好、克制。";
 // 拉丁字母占比：判断一句话是英文（含印尼/马来文）还是中文
 const latin = (s: string) => { const l = (s.match(/[A-Za-z]/g) ?? []).length, z = (s.match(/[一-鿿]/g) ?? []).length; return l / Math.max(1, l + z * 2); };
 
@@ -96,22 +108,22 @@ Deno.serve(async (req) => {
   const stats = contact.stats ?? {};
   const platform = stats.platform === "WhatsApp" || stats.platform === "LinkedIn" ? stats.platform : "微信";
   const samples: string[] = contact.my_samples ?? [];
-  const en = stats.lang ? stats.lang !== "zh" : samples.filter((t) => latin(t) > 0.6).length > samples.length / 2;
-  const ex = (examples.data ?? []).filter((e) => (latin(e.text) > 0.6) === en);
+  const li = platform === "LinkedIn"; // LinkedIn 一律英文，不套微信、WhatsApp 的说话习惯和例句
+  const en = li || (stats.lang ? stats.lang !== "zh" : samples.filter((t) => latin(t) > 0.6).length > samples.length / 2);
+  const ex = li ? [] : (examples.data ?? []).filter((e) => (latin(e.text) > 0.6) === en);
   const learned = ex.filter((e) => !/导入$/.test(e.source)).slice(0, 8);
   const imported = shuffle(ex.filter((e) => /导入$/.test(e.source))).slice(0, 10);
   const lines = (rows: Record<string, unknown>[] | null, f: (r: any) => string) => (rows && rows.length ? rows.map(f).join("\n") : "（暂无）");
-  let profile = settings.data?.style_profile || DEFAULT_PROFILE;
-  if (en && !/英文|WhatsApp/.test(profile)) profile += "\n" + DEFAULT_PROFILE_EN;
+  let profile = li ? LINKEDIN_PROFILE : settings.data?.style_profile || DEFAULT_PROFILE;
+  if (en && !li && !/英文|WhatsApp/.test(profile)) profile += "\n" + DEFAULT_PROFILE_EN;
 
   const prompt = `你在替 Bruce（周宗信）写一条要发给客户的${platform}消息。Bruce 是上海有色网（SMM）马来西亚办公室的镍、高镍生铁（NPI）、不锈钢分析师，二十多岁，马来西亚华人。他的目标是从客户那里拿到一手市场信息，并且和客户成为朋友。
 
 【语言】
-${en ? "用英文写，照 Bruce 平时跟这位客户的英文口吻（看下面他说过的话和例句）。对方是印尼人可以称 Pak/Bu，偶尔夹一两个印尼语词也行。不要写中文，也不要用微信表情代码（比如 [捂脸]）。下面的资料和情报是中文，用到时翻成自然的英文。" : "用中文写。"}
+${li ? "用英文写，对方是华人也一样，也不要提可以改用中文聊。不要用微信表情代码（比如 [捂脸]）。下面的资料是中文，用到时翻成自然的英文。"
+  : en ? "用英文写，照 Bruce 平时跟这位客户的英文口吻（看下面他说过的话和例句）。对方是印尼人可以称 Pak/Bu，偶尔夹一两个印尼语词也行。不要写中文，也不要用微信表情代码（比如 [捂脸]）。下面的资料和情报是中文，用到时翻成自然的英文。" : "用中文写。"}
 
-${platform === "LinkedIn" ? `【渠道：LinkedIn 私信】
-对方多半只在 LinkedIn 上加了好友，还没跟 Bruce 聊过。第一条先用一句话说清楚自己是谁（SMM 的镍和不锈钢分析师）和为什么找他，再给一个对他有用的东西（一个数字、一个判断、一份报告），最后问一个他容易回答的问题。比微信、WhatsApp 正式一点，但不要写成邮件：不用 Dear、Regards，不用表情，不要群发腔。“下次跟进”里如果有现成的草稿，参考它的角度但写得更像 Bruce；如果写着还在等对方通过好友邀请，就写通过后的第一条。
-` : ""}
+${li ? LINKEDIN : ""}
 【Bruce 的说话习惯】
 ${profile}
 
@@ -137,11 +149,11 @@ ${lines(logs.data, (l) => `- ${l.date} ${l.channel ?? ""}：${l.summary ?? ""}${
 【他以前给过的情报】
 ${lines(theirs.data, (i) => `- ${i.date} [${i.category}] ${i.content}`)}
 
-【Bruce 手上最新的市场情报】（可以拿来亮牌，只说内容，绝不提来源或成交方的名字）
+【Bruce 手上最新的市场情报】（${li ? "LinkedIn 上只有对方已经回过话、聊开了才能用；" : ""}可以拿来亮牌，只说内容，绝不提来源或成交方的名字）
 ${lines(market.data, (i) => `- ${i.date} [${i.category}] ${i.content}`)}
 
 今天是 ${today()}。
-写 4 个不同角度的选项。每个选项是 Bruce 可以直接复制发出的${platform}消息：口语，像他本人；最多 3 短句，可以拆成两条消息（用换行分开）；不要编号、引号、解释；不要说出任何成交方、买卖方或信息来源的名字；不提公司内部资料。
+写 4 个不同角度的选项。每个选项是 Bruce 可以直接复制发出的${platform}消息：${li ? "一段英文，三四句话" : "口语，像他本人；最多 3 短句，可以拆成两条消息（用换行分开）"}；不要编号、引号、解释；不要说出任何成交方、买卖方或信息来源的名字；不提公司内部资料。
 只回复 JSON：{"options":[{"label":"4到8个字说明这个角度","text":"消息内容"}]}`;
 
   try {
