@@ -1,6 +1,7 @@
 // Supabase Edge Function「callnote」：把一通电话的转写整理成一条记录：要点、市场情报、下次跟进。
-// 只返回结果，不写数据库；网页让 Bruce 改完确认后再保存。需要的 Secrets：OPENAI_API_KEY、OPENAI_MODEL
+// 只返回结果，不写数据库；网页让 Bruce 改完确认后再保存。需要的 Secrets：ANTHROPIC_API_KEY；可选 CLAUDE_MODEL（不填用 claude-opus-5-5）
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
+import Anthropic from "npm:@anthropic-ai/sdk@1.3.0";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -14,6 +15,33 @@ const CATS = ["NPI/镍铁", "不锈钢", "纯镍/LME", "印尼政策/矿", "MHP/
 const WEEK = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
 const today = () => new Date(Date.now() + 8 * 3600e3).toISOString().slice(0, 10);
 const clip = (s: unknown, n: number) => String(s ?? "").replace(/\s+/g, " ").trim().slice(0, n);
+const ROLES = ["Bruce", "客户", "其他"];
+const obj = (properties: Record<string, unknown>) => ({ type: "object", properties, required: Object.keys(properties), additionalProperties: false });
+const SCHEMA = obj({
+  speakers: { type: "array", items: obj({ label: { type: "string" }, role: { type: "string", enum: ROLES } }) },
+  points: { type: "array", items: { type: "string" } },
+  intel: { type: "array", items: obj({ category: { type: "string", enum: CATS }, content: { type: "string" } }) },
+  next: { type: "string" },
+  nextDate: { type: "string" },
+});
+
+// 问 Claude，回答按 schema 给 JSON
+async function askClaude(prompt: string, schema: Record<string, unknown>) {
+  const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+  if (!apiKey) throw new Error("Supabase 里还没设置 ANTHROPIC_API_KEY");
+  const r = await new Anthropic({ apiKey }).beta.messages.create({
+    model: Deno.env.get("CLAUDE_MODEL") || "claude-opus-5-5",
+    max_tokens: 16000,
+    messages: [{ role: "user", content: prompt }],
+    output_config: { effort: "medium", format: { type: "json_schema", schema } },
+    // 万一被安全审核挡下，服务端自动换一个模型重答
+    betas: ["server-side-fallback-2026-07-01"],
+    fallbacks: "default",
+  });
+  if (r.stop_reason === "refusal") throw new Error("Claude 这次没答，再试一次");
+  if (r.stop_reason === "max_tokens") throw new Error("回答太长被截断了，再试一次");
+  return r.content.map((b) => (b.type === "text" ? b.text : "")).join("");
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -38,9 +66,6 @@ Deno.serve(async (req) => {
     const d = new Date(base + (i + 1) * 864e5), wk = dow + i + 1 <= 7 ? "本" : dow + i + 1 <= 14 ? "下" : "下下";
     return `${d.toISOString().slice(0, 10)}${i === 0 ? " 明天" : i === 1 ? " 后天" : ""} ${wk}${WEEK[d.getUTCDay()]}`;
   }).join("\n");
-
-  const key = Deno.env.get("OPENAI_API_KEY"), model = Deno.env.get("OPENAI_MODEL");
-  if (!key || !model) return json({ error: "Supabase 里还没设置 OPENAI_API_KEY 或 OPENAI_MODEL" }, 500);
 
   const { data: c } = input.contactId
     ? await sb.from("contacts").select("name,company,role,gives,wants").eq("id", input.contactId).maybeSingle()
@@ -72,7 +97,7 @@ ${ctx}
 
 3. next：下次要跟进的事，比如 Bruce 答应发的东西、客户要的数据、约好再聊的话题。没有就写空字符串。
 
-4. nextDate：如果说定了哪天再联系（比如“下周三再打给你”），从下面的日期表里查出 YYYY-MM-DD；没说定就给 null。
+4. nextDate：如果说定了哪天再联系（比如“下周三再打给你”），从下面的日期表里查出 YYYY-MM-DD；没说定就给空字符串。
 ${cal}
 
 ${plain ? `转写一（按说话人分了行，用来判断谁说的，字可能不准）：
@@ -82,19 +107,11 @@ ${transcript}
 ${plain}` : `转写：
 ${transcript}`}
 
-只回复 JSON：{"speakers":{"说话人1":"Bruce","说话人2":"客户"},"points":["要点"],"intel":[{"category":"品类","content":"情报内容"}],"next":"","nextDate":null}
-speakers 的值只能是 Bruce、客户、其他；转写没分说话人就给 {}。`;
+只回复 JSON：{"speakers":[{"label":"说话人1","role":"Bruce"},{"label":"说话人2","role":"客户"}],"points":["要点"],"intel":[{"category":"品类","content":"情报内容"}],"next":"","nextDate":""}
+speakers 的 role 只能是 Bruce、客户、其他；转写没分说话人就给 []。`;
 
-  const body: Record<string, unknown> = { model, messages: [{ role: "user", content: prompt }], response_format: { type: "json_object" } };
-  const call = () => fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, body: JSON.stringify(body),
-  });
-  let r = await call();
-  let data = await r.json().catch(() => null);
-  if (!r.ok && /response_format/i.test(data?.error?.message ?? "")) { delete body.response_format; r = await call(); data = await r.json().catch(() => null); }
-  if (!r.ok) return json({ error: data?.error?.message ?? `OpenAI 返回 ${r.status}` }, 502);
-
-  const text = String(data?.choices?.[0]?.message?.content ?? "");
+  let text = "";
+  try { text = await askClaude(prompt, SCHEMA); } catch (e) { return json({ error: String((e as Error).message ?? e) }, 502); }
   let out: any = null;
   try { out = JSON.parse(text); } catch { const m = text.match(/\{[\s\S]*\}/); if (m) { try { out = JSON.parse(m[0]); } catch { /* ignore */ } } }
   if (!out) return json({ error: "这次没整理出来，再试一次" }, 502);
@@ -107,8 +124,8 @@ speakers 的值只能是 Bruce、客户、其他；转写没分说话人就给 {
     .map((i: any) => ({ category: CATS.includes(i.category) ? i.category : "其他", content: clip(i.content, 300) }));
   const nextDate = /^\d{4}-\d{2}-\d{2}$/.test(out.nextDate ?? "") && out.nextDate >= day ? out.nextDate : null;
   const speakers: Record<string, string> = {};
-  if (out.speakers && typeof out.speakers === "object") {
-    for (const [k, v] of Object.entries(out.speakers)) if (/^说话人/.test(k) && ["Bruce", "客户", "其他"].includes(String(v))) speakers[k] = String(v);
+  for (const s of Array.isArray(out.speakers) ? out.speakers : []) {
+    if (/^说话人/.test(String(s?.label)) && ROLES.includes(String(s?.role))) speakers[s.label] = String(s.role);
   }
   return json({ speakers, points, intel, next: clip(out.next, 200), nextDate });
 });

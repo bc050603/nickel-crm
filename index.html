@@ -1129,7 +1129,7 @@ function renderCall(){
       </div>
       <input type="file" id="cl-file" accept="audio/*,.m4a,.mp3,.wav,.aac,.ogg,.webm,.mp4,.flac" hidden>
       ${err}
-      <p class="hint">录通话前先跟对方打声招呼。音频只用来转文字，不会保存；转写和整理会经过 OpenAI。</p>`;
+      <p class="hint">录通话前先跟对方打声招呼。音频只用来转文字，不会保存；转文字经过 OpenAI，整理经过 Claude。</p>`;
     $("cl-c").value = st.id;
     $("cl-c").onchange = e => { st.id = e.target.value; st.error = ""; renderCall(); };
     body.querySelectorAll("[data-src]").forEach(b => b.onclick = () => {

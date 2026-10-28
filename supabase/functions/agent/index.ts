@@ -1,7 +1,8 @@
 // Supabase Edge Function「agent」：客户参谋。回答“今天找谁询价”“谁很久没聊了”这类问题。
-// 每次按登录用户读取全部客户、最近记录和情报（行级权限生效），交给 OpenAI 回答。
-// 需要的 Secrets：OPENAI_API_KEY、OPENAI_MODEL
+// 每次按登录用户读取全部客户、最近记录和情报（行级权限生效），交给 Claude 回答。
+// 需要的 Secrets：ANTHROPIC_API_KEY；可选 CLAUDE_MODEL（不填用 claude-opus-5-5）
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
+import Anthropic from "npm:@anthropic-ai/sdk@1.3.0";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -23,26 +24,30 @@ function clientFor(req: Request) {
   });
 }
 
-async function askOpenAI(messages: { role: string; content: string }[]) {
-  const key = Deno.env.get("OPENAI_API_KEY");
-  const model = Deno.env.get("OPENAI_MODEL");
-  if (!key) throw new Error("Supabase 里还没设置 OPENAI_API_KEY");
-  if (!model) throw new Error("Supabase 里还没设置 OPENAI_MODEL");
-  const body: Record<string, unknown> = { model, messages, response_format: { type: "json_object" } };
-  const call = () => fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+const obj = (properties: Record<string, unknown>) => ({ type: "object", properties, required: Object.keys(properties), additionalProperties: false });
+const SCHEMA = obj({
+  reply: { type: "string" },
+  contacts: { type: "array", items: obj({ id: { type: "string" }, name: { type: "string" }, why: { type: "string" }, mode: { type: "string", enum: MODES } }) },
+});
+
+// 问 Claude，回答按 schema 给 JSON。同一段对话里追问时，客户表那一大段走缓存，便宜也快一些
+async function askClaude(system: string, messages: { role: "user" | "assistant"; content: string }[], schema: Record<string, unknown>) {
+  const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+  if (!apiKey) throw new Error("Supabase 里还没设置 ANTHROPIC_API_KEY");
+  const r = await new Anthropic({ apiKey }).beta.messages.create({
+    model: Deno.env.get("CLAUDE_MODEL") || "claude-opus-5-5",
+    max_tokens: 16000,
+    system,
+    messages,
+    cache_control: { type: "ephemeral" },
+    output_config: { effort: "medium", format: { type: "json_schema", schema } },
+    // 万一被安全审核挡下，服务端自动换一个模型重答
+    betas: ["server-side-fallback-2026-07-01"],
+    fallbacks: "default",
   });
-  let r = await call();
-  let data = await r.json().catch(() => null);
-  if (!r.ok && /response_format/i.test(data?.error?.message ?? "")) {
-    delete body.response_format;
-    r = await call();
-    data = await r.json().catch(() => null);
-  }
-  if (!r.ok) throw new Error(data?.error?.message ?? `OpenAI 返回 ${r.status}`);
-  return String(data?.choices?.[0]?.message?.content ?? "");
+  if (r.stop_reason === "refusal") throw new Error("Claude 这次没答，换个问法再试");
+  if (r.stop_reason === "max_tokens") throw new Error("回答太长被截断了，再问一次");
+  return r.content.map((b) => (b.type === "text" ? b.text : "")).join("");
 }
 
 function parseJson(text: string) {
@@ -70,7 +75,8 @@ Deno.serve(async (req) => {
   const turns = (input.messages ?? [])
     .filter((m) => (m.role === "user" || m.role === "assistant") && typeof m.content === "string" && m.content.trim())
     .slice(-12)
-    .map((m) => ({ role: m.role, content: m.content.slice(0, 2000) }));
+    .map((m) => ({ role: m.role as "user" | "assistant", content: m.content.slice(0, 2000) }));
+  while (turns.length && turns[0].role !== "user") turns.shift(); // Claude 要求对话从用户开始
   if (!turns.length || turns[turns.length - 1].role !== "user") return json({ error: "缺少问题" }, 400);
 
   const [cs, logs, intel, settings] = await Promise.all([
@@ -118,7 +124,7 @@ ${(intel.data ?? []).map((i) => `- ${i.date} [${i.category}] ${clip(i.content, 9
 - 只回复 JSON：{"reply":"给 Bruce 看的回答","contacts":[{"id":"原样复制表格第一列的 id","name":"名字","why":"一句话理由","mode":"询价"}]}。contacts 最多 8 个，按优先级排；没有要推荐的人就给空数组。`;
 
   try {
-    const out = parseJson(await askOpenAI([{ role: "system", content: system }, ...turns]));
+    const out = parseJson(await askClaude(system, turns, SCHEMA));
     if (!out || typeof out.reply !== "string") return json({ error: "这次没答出来，再问一次" }, 502);
     // 先按 id 对上；模型偶尔写错 id，就按名字找回同一个人
     const byId = new Map(contacts.map((c) => [c.id, c]));

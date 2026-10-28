@@ -1,12 +1,12 @@
 # 镍圈客户簿
 
-Bruce 的个人客户管理工具：跟进提醒、快速记录、情报日志、一键写开场白（OpenAI）。
+Bruce 的个人客户管理工具：跟进提醒、快速记录、情报日志、一键写开场白（Claude）。
 
 - 网页放在 GitHub Pages（公开的静态页面，只有代码）
 - 数据放在你自己的 Supabase 数据库，必须登录才能读写，每个人只能看到自己的数据
-- OpenAI key 只存在 Supabase 的 Edge Function Secrets 里，网页和仓库里都没有
+- Claude（Anthropic）和 OpenAI 的 key 只存在 Supabase 的 Edge Function Secrets 里，网页和仓库里都没有
 
-**永远不要提交到仓库的东西**：`crm-seed.json`、导出的备份、聊天记录、`service_role` key、OpenAI key。`.gitignore` 已经挡住了常见的文件名。
+**永远不要提交到仓库的东西**：`crm-seed.json`、导出的备份、聊天记录、`service_role` key、Anthropic key、OpenAI key。`.gitignore` 已经挡住了常见的文件名。
 
 ## 一次性设置（约 15 分钟）
 
@@ -21,11 +21,12 @@ Bruce 的个人客户管理工具：跟进提醒、快速记录、情报日志�
 
 ### 3. 部署两个函数
 1. 打开 **Edge Functions → Deploy a new function → Via Editor**，函数名填 `opener`，把 `supabase/functions/opener/index.ts` 的内容粘进去，点 Deploy。
-2. 同样再建 `agent`、`transcribe`、`callnote`，分别粘 `supabase/functions/` 下同名文件夹里的 `index.ts`（`transcribe` 用到 npm 上的 `opencc-js` 把繁体转简体，部署时自动下载）。
+2. 同样再建 `agent`、`extract`、`transcribe`、`callnote`，分别粘 `supabase/functions/` 下同名文件夹里的 `index.ts`（`transcribe` 用到 npm 上的 `opencc-js` 把繁体转简体，部署时自动下载）。
 3. 每个函数都在代码里自己检查登录，保持 **Verify JWT** 打开也没问题。
-3. 在 **Edge Functions → Secrets** 里加两个值：
-   - `OPENAI_API_KEY`：你的 OpenAI API key
-   - `OPENAI_MODEL`：你想用的模型名，以 OpenAI 后台列出的为准
+3. 在 **Edge Functions → Secrets** 里加这些值：
+   - `ANTHROPIC_API_KEY`：你的 Claude API key（在 console.anthropic.com 建）。写开场白、参谋、提取情报、整理通话都用 Claude
+   - 可选 `CLAUDE_MODEL`：不填用 `claude-opus-5-5`；想省钱可以填 `claude-sonnet-5-5`
+   - `OPENAI_API_KEY`：你的 OpenAI API key，只用来把通话录音转成文字（Claude 不做语音转文字）
    - 可选 `OPENAI_TRANSCRIBE_MODEL`：通话转文字的模型，不填用 `gpt-transcribe`
    - 可选 `OPENAI_DIARIZE_MODEL`：分说话人的模型，不填用 `gpt-4o-transcribe-diarize`（OpenAI 唯一能分说话人的模型，2027-02-26 下线；填 `off` 关掉）
 
@@ -54,7 +55,7 @@ Bruce 的个人客户管理工具：跟进提醒、快速记录、情报日志�
 - **设置 → 我的说话习惯**：开场白照这段写，可以直接改。
 - **设置 → 导出备份**：定期导出一份 JSON 存在电脑上，以后能用「导入数据」恢复。
 
-写开场白、问参谋和通话转录时，客户资料、记录、情报和通话录音会发给 OpenAI。
+写开场白、问参谋、刷新时提取情报、整理通话时，客户资料、记录、情报、聊天和通话转写会发给 Anthropic（Claude）；通话录音转文字时，音频会发给 OpenAI。
 
 ## 刷新：微信和 WhatsApp 同步（手动）
 

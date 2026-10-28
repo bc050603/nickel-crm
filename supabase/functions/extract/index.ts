@@ -1,6 +1,7 @@
 // Supabase Edge Function「extract」：从一段客户微信对话里挑出市场情报（价格、成交、排产、库存、政策）。
-// 只返回结果，不写数据库；由本机同步脚本写入。需要的 Secrets：OPENAI_API_KEY、OPENAI_MODEL
+// 只返回结果，不写数据库；由本机同步脚本写入。需要的 Secrets：ANTHROPIC_API_KEY；可选 CLAUDE_MODEL（不填用 claude-opus-5-5）
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
+import Anthropic from "npm:@anthropic-ai/sdk@1.3.0";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -11,6 +12,26 @@ const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
 
 const CATS = ["NPI/镍铁", "不锈钢", "纯镍/LME", "印尼政策/矿", "MHP/高冰/新能源", "废钢/铬", "海外/贸易", "其他"];
+const obj = (properties: Record<string, unknown>) => ({ type: "object", properties, required: Object.keys(properties), additionalProperties: false });
+const SCHEMA = obj({ items: { type: "array", items: obj({ date: { type: "string" }, category: { type: "string", enum: CATS }, content: { type: "string" } }) } });
+
+// 问 Claude，回答按 schema 给 JSON
+async function askClaude(prompt: string, schema: Record<string, unknown>) {
+  const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+  if (!apiKey) throw new Error("Supabase 里还没设置 ANTHROPIC_API_KEY");
+  const r = await new Anthropic({ apiKey }).beta.messages.create({
+    model: Deno.env.get("CLAUDE_MODEL") || "claude-opus-5-5",
+    max_tokens: 16000,
+    messages: [{ role: "user", content: prompt }],
+    output_config: { effort: "medium", format: { type: "json_schema", schema } },
+    // 万一被安全审核挡下，服务端自动换一个模型重答
+    betas: ["server-side-fallback-2026-07-01"],
+    fallbacks: "default",
+  });
+  if (r.stop_reason === "refusal") throw new Error("Claude 这次没答，再试一次");
+  if (r.stop_reason === "max_tokens") throw new Error("回答太长被截断了，再试一次");
+  return r.content.map((b) => (b.type === "text" ? b.text : "")).join("");
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -27,9 +48,6 @@ Deno.serve(async (req) => {
   try { input = await req.json(); } catch { return json({ error: "请求格式不对" }, 400); }
   const msgs = (input.messages ?? []).filter((m) => m && typeof m.text === "string" && m.text.trim()).slice(-60);
   if (!msgs.length) return json({ items: [] });
-
-  const key = Deno.env.get("OPENAI_API_KEY"), model = Deno.env.get("OPENAI_MODEL");
-  if (!key || !model) return json({ error: "Supabase 里还没设置 OPENAI_API_KEY 或 OPENAI_MODEL" }, 500);
 
   const convo = msgs.map((m) => `${m.time} ${m.me ? "Bruce" : (input.contactName ?? "客户")}：${m.text.slice(0, 400)}`).join("\n");
   const prompt = `下面是镍和不锈钢分析师 Bruce 和客户「${input.contactName ?? ""}」${input.contactCompany ? `（${input.contactCompany}）` : ""}最近的微信对话。
@@ -59,16 +77,8 @@ ${convo}
 
 只回复 JSON：{"items":[{"date":"YYYY-MM-DD","category":"品类","content":"情报内容"}]}`;
 
-  const body: Record<string, unknown> = { model, messages: [{ role: "user", content: prompt }], response_format: { type: "json_object" } };
-  const call = () => fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, body: JSON.stringify(body),
-  });
-  let r = await call();
-  let data = await r.json().catch(() => null);
-  if (!r.ok && /response_format/i.test(data?.error?.message ?? "")) { delete body.response_format; r = await call(); data = await r.json().catch(() => null); }
-  if (!r.ok) return json({ error: data?.error?.message ?? `OpenAI 返回 ${r.status}` }, 502);
-
-  const text = String(data?.choices?.[0]?.message?.content ?? "");
+  let text = "";
+  try { text = await askClaude(prompt, SCHEMA); } catch (e) { return json({ error: String((e as Error).message ?? e) }, 502); }
   let out: any = null;
   try { out = JSON.parse(text); } catch { const m = text.match(/\{[\s\S]*\}/); if (m) { try { out = JSON.parse(m[0]); } catch { /* ignore */ } } }
   const items = (Array.isArray(out?.items) ? out.items : [])

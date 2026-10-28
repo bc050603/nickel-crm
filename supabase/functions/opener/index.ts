@@ -1,7 +1,8 @@
 // Supabase Edge Function「opener」：按场景、用 Bruce 的说话方式写 3-4 个开场白选项。
-// 数据在服务端按登录用户读取（行级权限生效），OpenAI key 只在 Secrets 里。
-// 需要的 Secrets：OPENAI_API_KEY、OPENAI_MODEL
+// 数据在服务端按登录用户读取（行级权限生效），Claude 的 key 只在 Secrets 里。
+// 需要的 Secrets：ANTHROPIC_API_KEY；可选 CLAUDE_MODEL（不填用 claude-opus-5-5）
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
+import Anthropic from "npm:@anthropic-ai/sdk@1.3.0";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -34,26 +35,25 @@ function clientFor(req: Request) {
   });
 }
 
-async function askOpenAI(messages: { role: string; content: string }[]) {
-  const key = Deno.env.get("OPENAI_API_KEY");
-  const model = Deno.env.get("OPENAI_MODEL");
-  if (!key) throw new Error("Supabase 里还没设置 OPENAI_API_KEY");
-  if (!model) throw new Error("Supabase 里还没设置 OPENAI_MODEL");
-  const body: Record<string, unknown> = { model, messages, response_format: { type: "json_object" } };
-  const call = () => fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+const obj = (properties: Record<string, unknown>) => ({ type: "object", properties, required: Object.keys(properties), additionalProperties: false });
+const SCHEMA = obj({ options: { type: "array", items: obj({ label: { type: "string" }, text: { type: "string" } }) } });
+
+// 问 Claude，回答按 schema 给 JSON
+async function askClaude(prompt: string, schema: Record<string, unknown>) {
+  const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+  if (!apiKey) throw new Error("Supabase 里还没设置 ANTHROPIC_API_KEY");
+  const r = await new Anthropic({ apiKey }).beta.messages.create({
+    model: Deno.env.get("CLAUDE_MODEL") || "claude-opus-5-5",
+    max_tokens: 16000,
+    messages: [{ role: "user", content: prompt }],
+    output_config: { effort: "medium", format: { type: "json_schema", schema } },
+    // 万一被安全审核挡下，服务端自动换一个模型重答
+    betas: ["server-side-fallback-2026-07-01"],
+    fallbacks: "default",
   });
-  let r = await call();
-  let data = await r.json().catch(() => null);
-  if (!r.ok && /response_format/i.test(data?.error?.message ?? "")) {
-    delete body.response_format;
-    r = await call();
-    data = await r.json().catch(() => null);
-  }
-  if (!r.ok) throw new Error(data?.error?.message ?? `OpenAI 返回 ${r.status}`);
-  return String(data?.choices?.[0]?.message?.content ?? "");
+  if (r.stop_reason === "refusal") throw new Error("Claude 这次没答，再试一次");
+  if (r.stop_reason === "max_tokens") throw new Error("回答太长被截断了，再试一次");
+  return r.content.map((b) => (b.type === "text" ? b.text : "")).join("");
 }
 
 function parseJson(text: string) {
@@ -145,7 +145,7 @@ ${lines(market.data, (i) => `- ${i.date} [${i.category}] ${i.content}`)}
 只回复 JSON：{"options":[{"label":"4到8个字说明这个角度","text":"消息内容"}]}`;
 
   try {
-    const out = parseJson(await askOpenAI([{ role: "user", content: prompt }]));
+    const out = parseJson(await askClaude(prompt, SCHEMA));
     const options = (out?.options ?? [])
       .filter((o: any) => o && typeof o.text === "string" && o.text.trim())
       .slice(0, 4)
