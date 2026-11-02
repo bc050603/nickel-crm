@@ -215,7 +215,7 @@ def redo_intel(sb: Supabase, vault, dec, sessions, crm: dict, since: int, dry: b
     total, names = 0, []
     for s in sessions:
         cid = crm_id(s["username"])
-        if cid not in crm or s["timestamp"] <= since:
+        if cid not in crm or crm[cid].get("relation") == "同事" or s["timestamp"] <= since:
             continue
         msgs, mine, theirs = new_messages(vault, dec, s, since)
         if not msgs:
@@ -304,7 +304,7 @@ def wa_match(crm: dict, jid: str, lid_phone: dict):
 
 
 def sync_whatsapp(sb: Supabase, state: dict, args) -> dict:
-    crm = {c["id"]: c for c in sb.select("contacts", "select=id,name,company,phone,stats,last_their,last_touch,my_samples&limit=2000")}
+    crm = {c["id"]: c for c in sb.select("contacts", "select=id,name,company,phone,relation,stats,last_their,last_touch,my_samples&limit=2000")}
     since_all = state.setdefault("wa_since", {})
     default_since = datetime.strptime(args.since or WA_FIRST_SINCE, "%Y-%m-%d %H:%M:%S").timestamp()
     last_run = state.get("wa_last_run") or default_since
@@ -329,6 +329,8 @@ def sync_whatsapp(sb: Supabase, state: dict, args) -> dict:
                 if jid not in known and (last_date or 0) + APPLE_EPOCH > last_run:
                     summary["unknown"].append(re.sub(r"[‪-‮⁦-⁩‎‏]", "", partner or "").strip() or resolve(jid))
                 continue
+            if c.get("relation") == "同事":
+                continue  # 同事的卡留着认人，聊天不读
             group = stype != 0
             since = float(args.since and default_since or since_all.get(jid, default_since))
             if (last_date or 0) + APPLE_EPOCH <= since and not any(t > since for t, *_ in calls):
@@ -468,7 +470,7 @@ def sync_wechat(sb: Supabase, state: dict, args) -> None:
     wx_contacts, _ = vault.load_contacts(dec)
     sessions = [s for s in vault.session_rows(dec, False, None) if not s["is_group"] and not s["username"].startswith("gh_")]
 
-    crm = {c["id"]: c for c in sb.select("contacts", "select=id,name,company,tier,last_their,last_touch,my_samples&limit=2000")}
+    crm = {c["id"]: c for c in sb.select("contacts", "select=id,name,company,tier,relation,last_their,last_touch,my_samples&limit=2000")}
     since_all = state.setdefault("since", {})
     default_since = int(datetime.strptime(args.since or FIRST_SINCE, "%Y-%m-%d %H:%M:%S").timestamp())
     if args.redo_intel:
@@ -492,8 +494,8 @@ def sync_wechat(sb: Supabase, state: dict, args) -> None:
     summary = {"clients": 0, "their": 0, "mine": 0, "logs": 0, "intel": 0, "new": len(new_people), "names": []}
     for s in sessions:
         cid = crm_id(s["username"])
-        if cid not in crm:
-            continue  # 私人聊天，不碰
+        if cid not in crm or crm[cid].get("relation") == "同事":
+            continue  # 私人聊天和同事，不碰（同事留在 crm 里，免得被当成新联系人建卡）
         since = int(args.since and default_since or since_all.get(s["username"], default_since))
         if s["timestamp"] <= since:
             continue
