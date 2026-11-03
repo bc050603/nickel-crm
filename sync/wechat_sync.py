@@ -347,7 +347,7 @@ def sync_whatsapp(sb: Supabase, state: dict, args) -> dict:
             mine_calls = [x for x in calls if x[0] > since and (x[2] == jid if group else bool(x[5] & alias))]
             talked = [x for x in mine_calls if x[1] > 0]
             if not msgs and not mine_calls:
-                since_all[jid] = (last_date or 0) + APPLE_EPOCH
+                since_all[jid] = max(since, (last_date or 0) + APPLE_EPOCH)  # 进度只往前走：会话最后一条可能早于导入时间
                 continue
 
             stamps = [m["ts"] for m in msgs] + [x[0] for x in talked]
