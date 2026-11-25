@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import getpass
+import http.client
 import json
 import os
 import re
@@ -26,9 +27,11 @@ import ssl
 import subprocess
 import sys
 import tempfile
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import uuid
 from datetime import datetime
 from pathlib import Path
 
@@ -101,6 +104,7 @@ def tls_context() -> ssl.SSLContext:
 
 
 TLS = tls_context()
+RETRY_WAIT = (2, 5, 10)  # 网络抖一下（SSL 断连、超时、网关 5xx）就等几秒再试，最多再试 3 次
 
 
 class Supabase:
@@ -113,18 +117,25 @@ class Supabase:
             h["Authorization"] = "Bearer " + self.token
         h.update(headers or {})
         data = None if body is None else json.dumps(body, ensure_ascii=False).encode()
-        req = urllib.request.Request(self.url + path, data=data, method=method, headers=h)
-        try:
-            with urllib.request.urlopen(req, timeout=90, context=TLS) as r:
-                raw = r.read()
-                return json.loads(raw) if raw else None
-        except urllib.error.HTTPError as e:
-            detail = e.read().decode(errors="replace")[:300]
-            if "invalid_grant" in detail or "Invalid login" in detail:
-                raise SystemExit("邮箱或密码不对，或者登录已失效。重新运行：python3 sync/wechat_sync.py login") from None
-            raise SystemExit(f"Supabase 返回 {e.code}：{detail}") from None
-        except urllib.error.URLError as e:
-            raise SystemExit(f"连不上 Supabase：{e.reason}") from None
+        for attempt in range(len(RETRY_WAIT) + 1):
+            req = urllib.request.Request(self.url + path, data=data, method=method, headers=h)
+            try:
+                with urllib.request.urlopen(req, timeout=90, context=TLS) as r:
+                    raw = r.read()
+                    return json.loads(raw) if raw else None
+            except urllib.error.HTTPError as e:
+                detail = e.read().decode(errors="replace")[:300]
+                if e.code in (502, 503, 504) and attempt < len(RETRY_WAIT):
+                    time.sleep(RETRY_WAIT[attempt])
+                    continue
+                if "invalid_grant" in detail or "Invalid login" in detail:
+                    raise SystemExit("邮箱或密码不对，或者登录已失效。重新运行：python3 sync/wechat_sync.py login") from None
+                raise SystemExit(f"Supabase 返回 {e.code}：{detail}") from None
+            except (OSError, http.client.HTTPException) as e:  # SSL 断连、超时、连接被重置
+                if attempt < len(RETRY_WAIT):
+                    time.sleep(RETRY_WAIT[attempt])
+                    continue
+                raise SystemExit(f"连不上 Supabase（试了 {attempt + 1} 次）：{getattr(e, 'reason', None) or e}") from None
 
     def login(self, email: str, password: str) -> dict:
         return self._call("POST", "/auth/v1/token?grant_type=password", {"email": email, "password": password}, auth=False)
@@ -136,7 +147,9 @@ class Supabase:
         return self._call("GET", f"/rest/v1/{table}?{query}")
 
     def insert(self, table: str, rows):
-        return self._call("POST", f"/rest/v1/{table}", rows, {"Prefer": "return=minimal"})
+        # 每行自带 id，撞上已有的就跳过：网络断在服务器写完之后，重试也不会多记一笔
+        rows = [r if "id" in r else {"id": str(uuid.uuid4()), **r} for r in (rows if isinstance(rows, list) else [rows])]
+        return self._call("POST", f"/rest/v1/{table}", rows, {"Prefer": "return=minimal,resolution=ignore-duplicates"})
 
     def update(self, table: str, match: str, patch: dict):
         return self._call("PATCH", f"/rest/v1/{table}?{match}", patch, {"Prefer": "return=minimal"})
@@ -186,6 +199,10 @@ def decrypt_incremental() -> None:
 
 
 # ---------- sync ----------
+def c_name(c: dict) -> str:
+    return c.get("name") or c.get("id", "")
+
+
 def new_messages(vault, dec, s: dict, since: int):
     """这个会话 since 之后的消息，分成你发的和他发的（按发送人账号，vault 标的“我”不可靠）。"""
     chat = {"username": s["username"], "display_name": s["chat"], "is_group": False}
@@ -403,6 +420,7 @@ def sync_whatsapp(sb: Supabase, state: dict, args) -> dict:
                 if intel_rows:
                     sb.insert("intel", intel_rows)
                 since_all[jid] = max([since, *[m["ts"] for m in msgs], *[x[0] for x in mine_calls]])
+                save_private(STATE_FILE, state)  # 每记完一位就存进度：中途断了，重跑不会把前面的再记一遍
                 c.update(patch)
             summary["clients"] += 1; summary["their"] += len(theirs); summary["mine"] += len(mine)
             summary["calls"] += len(talked); summary["logs"] += 1; summary["intel"] += len(intel_rows)
@@ -449,7 +467,7 @@ def main() -> None:
         except SystemExit as e:
             if args.redo_intel or args.no_whatsapp:
                 raise
-            print(f"微信这次没刷新：{e}")
+            print(f"微信这次没刷新完：{e}\n  已经记好的客户进度存下了，重跑会从断的地方接着来。")
     if args.redo_intel or args.no_whatsapp:
         return
     print("· 读 WhatsApp…", flush=True)
@@ -491,7 +509,7 @@ def sync_wechat(sb: Supabase, state: dict, args) -> None:
     if new_people and not args.dry_run:
         sb.insert("contacts", new_people)
 
-    summary = {"clients": 0, "their": 0, "mine": 0, "logs": 0, "intel": 0, "new": len(new_people), "names": []}
+    summary = {"clients": 0, "their": 0, "mine": 0, "logs": 0, "intel": 0, "new": len(new_people), "names": [], "unread": []}
     for s in sessions:
         cid = crm_id(s["username"])
         if cid not in crm or crm[cid].get("relation") == "同事":
@@ -501,7 +519,14 @@ def sync_wechat(sb: Supabase, state: dict, args) -> None:
             continue
         msgs, mine, theirs = new_messages(vault, dec, s, since)
         if not msgs:
-            since_all[s["username"]] = s["timestamp"]
+            chat = {"username": s["username"], "display_name": s["chat"], "is_group": False}
+            raw = [m for m in vault.collect_history(dec, chat, since + 1, None, 500, 0, None) if m["timestamp"] > since]
+            if raw:  # 只有系统提示（加好友通过、撤回之类），进度推到最后一条
+                since_all[s["username"]] = raw[-1]["timestamp"]
+            else:
+                # 会话有更新却一条都读不到：多半是微信新开了一个消息库（message_N.db）还没有 key。
+                # 进度不往前走，等 key 补上、能读到了再记，免得这些消息被永远跳过。
+                summary["unread"].append(c_name(crm[cid]))
             continue
         c = crm[cid]
         last_any = day(msgs[-1]["timestamp"])
@@ -528,6 +553,7 @@ def sync_wechat(sb: Supabase, state: dict, args) -> None:
             if intel_rows:
                 sb.insert("intel", intel_rows)
             since_all[s["username"]] = msgs[-1]["timestamp"]
+            save_private(STATE_FILE, state)  # 每记完一位就存进度：中途断了，重跑不会把前面的再记一遍
         summary["clients"] += 1; summary["their"] += len(theirs); summary["mine"] += len(mine)
         summary["logs"] += 1; summary["intel"] += len(intel_rows)
         summary["names"].append(f"{c['name']}（他 {len(theirs)} / 我 {len(mine)}" + (f"，情报 {len(intel_rows)}" if intel_rows else "") + "）")
@@ -542,6 +568,9 @@ def sync_wechat(sb: Supabase, state: dict, args) -> None:
         print("  - " + n)
     for p in new_people:
         print(f"  + 新客户：{p['name']}")
+    if summary["unread"]:
+        print(f"  ! {len(summary['unread'])} 位客户的会话有新动静，但读不到消息（多半是微信新开了消息库、还没抓到 key），"
+              "这次没记、进度也没动：" + "、".join(summary["unread"]))
 
 
 if __name__ == "__main__":
